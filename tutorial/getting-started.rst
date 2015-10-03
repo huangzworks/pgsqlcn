@@ -82,7 +82,97 @@
 那么你就应该去阅读相关的文档，
 确保相关的环境已经被正确地设置。
 
-基本架构知识
+基本架构
 ----------------------
 
+..
+    Before we proceed, 
+    you should understand the basic PostgreSQL system architecture. 
+    Understanding how the parts of PostgreSQL interact will make this chapter somewhat clearer.
 
+在学习如何操作 PostgreSQL 之前，
+我们需要先了解一下 PostgreSQL 系统的基本架构。
+理解 PostgreSQL 的各个部分是如何进行交互的，
+将有助于我们学习本章接下来要介绍的知识。
+
+..
+    In database jargon, 
+    PostgreSQL uses a client/server model. 
+    A PostgreSQL session consists of the following cooperating processes (programs):
+
+用数据库的行话来讲，
+PostgreSQL 使用的是客户端/服务器模型。
+一个 PostgreSQL 会话（session）由以下协作进程（程序）组成：
+
+..
+    - A server process, which manages the database files, accepts connections to the database from client applications, and performs database actions on behalf of the clients. The database server program is called postgres.
+
+- 一个服务器进程，
+  它负责管理数据库文件、接受客户端程序对数据库的连接请求，
+  并对数据库执行客户端指定的动作。
+  这个数据库服务器程序的名字叫做 ``postgres`` 。
+
+..
+    - The user's client (frontend) application 
+    that wants to perform database operations. 
+    Client applications can be very diverse in nature: 
+    a client could be a text-oriented tool, 
+    a graphical application, 
+    a web server that accesses the database to display web pages, 
+    or a specialized database maintenance tool. 
+    Some client applications are supplied with the PostgreSQL distribution; 
+    most are developed by users.
+
+- 客户端（又称“前端”）程序，
+  用户使用这些程序来指定对数据库的操作。
+  客户端程序在本质上可以是非常多样的：
+  一个客户端可以是一个文本工具、
+  一个图形程序、
+  一个通过访问数据库来显示网页的 web 服务器，
+  又或者是一个专门的数据库维护工具。
+  某些客户端程序是跟着 PostgreSQL 一起发行的，
+  而其他大部分客户端则是由用户自己开发的。
+
+..
+    As is typical of client/server applications, 
+    the client and the server can be on different hosts. 
+    In that case they communicate over a TCP/IP network connection. 
+    You should keep this in mind, 
+    because the files that can be accessed on a client machine might not be accessible 
+    (or might only be accessible using a different file name) 
+    on the database server machine.
+
+跟典型的客户端/服务器程序一样，
+PostgreSQL 的客户端和服务器双方可以运行在不同的地址（host）上面。
+在这种情况下，
+客户端和服务器将通过 TCP/IP 网络连接进行通讯。
+读者应该牢牢记住这一点，
+因为在客户端机器上面能够访问的文件，
+在服务器机器上面并不一定能够访问
+（又或者需要以不同的名字来访问）。
+
+..
+    The PostgreSQL server can handle multiple concurrent connections from clients. 
+    To achieve this it starts ("forks") a new process for each connection. 
+    From that point on, 
+    the client and the new server process communicate without intervention by the original postgres process. 
+    Thus, 
+    the master server process is always running, 
+    waiting for client connections, 
+    whereas client and associated server processes come and go. 
+    (All of this is of course invisible to the user. We only mention it here for completeness.)
+
+PostgreSQL 服务器能够并发地处理来自多个客户端的多个连接。
+为了做到这一点，
+服务器会为每个连接都启动（或者说，fork）一个新的进程。
+在此之后，
+客户端和新进程就可以直接进行通讯，
+而不必担心被原来的 ``postgres`` 进程打扰。
+因此，
+主服务器进程将一直运行，
+等待客户端的连接请求；
+与此相反，
+客户端和与之相关联的服务器进程则会不断地出现和消逝。
+（当然，
+以上这些操作对于用户来说都是透明的，
+在这里提及这些知识只是为了完整性考虑。）
