@@ -82,6 +82,7 @@
 那么你就应该去阅读相关的文档，
 确保相关的环境已经被正确地设置。
 
+
 基本架构
 ----------------------
 
@@ -176,3 +177,254 @@ PostgreSQL 服务器能够并发地处理来自多个客户端的多个连接。
 （当然，
 以上这些操作对于用户来说都是透明的，
 在这里提及这些知识只是为了完整性考虑。）
+
+
+创建数据库
+------------------
+
+..
+    The first test to see whether you can access the database server 
+    is to try to create a database. 
+    A running PostgreSQL server can manage many databases. 
+    Typically, 
+    a separate database is used for each project 
+    or for each user.
+
+为了判断我们能否访问数据库服务器，
+我们首先要做的一个测试就是尝试去创建一个数据库。
+一个运行中的 PostgreSQL 服务器可以管理多个数据库。
+一般来说，
+每个用户都会为自己的每个项目独立使用一个数据库。
+
+..
+    Possibly, 
+    your site administrator has already created a database for your use. 
+    He should have told you what the name of your database is. 
+    In that case you can omit this step and skip ahead to the next section.
+
+如果你的系统管理员已经帮你创建好了数据库，
+并且他已经把属于你的数据库的名字告诉了你，
+那么你就可以跳过本节介绍的步骤，
+直接阅读下一节。
+
+..
+    To create a new database, 
+    in this example named mydb, 
+    you use the following command:
+
+举个例子，
+要创建一个名为 ``mydb`` 的新数据库，
+你可以使用以下命令：
+
+.. code-block:: bash
+
+    $ createdb mydb
+
+..
+    If this produces no response then this step was successful 
+    and you can skip over the remainder of this section.
+
+如果这个操作没有返回任何响应信息，
+那么说明操作成功，
+请跳过本节余下的部分，
+直接阅读下一节。
+
+..
+    If you see a message similar to:
+
+如果你看见了一条类似这样的信息：
+
+.. code-block:: bash
+
+    createdb: command not found
+
+..
+    then PostgreSQL was not installed properly. 
+    Either it was not installed at all 
+    or your shell's search path was not set to include it. 
+    Try calling the command with an absolute path instead:
+
+那么说明 PostgreSQL 并未被正确地安装。
+一个可能是 PostgreSQL 并未被安装，
+而另一个可能则是终端没有在搜索路径里面包含 PostgreSQL 所在的位置。
+你可以尝试通过绝对路径直接执行命令：
+
+.. code-block:: bash
+
+    $ /usr/local/pgsql/bin/createdb mydb
+
+..
+    The path at your site might be different. 
+    Contact your site administrator 
+    or check the installation instructions to correct the situation.
+
+在不同的机器上面，
+PostgreSQL 所在的路径可能会有所不同。
+请联系你的系统管理员，
+又或者根据安装手册的指示改正执行命令时的路径。
+
+..
+    Another response could be this:
+
+执行 ``createdb`` 命令可能得到的另一个回复是：
+
+.. code-block:: bash
+
+    createdb: could not connect to database postgres: could not connect to server: No such file or directory
+            Is the server running locally and accepting
+            connections on Unix domain socket "/tmp/.s.PGSQL.5432"?
+
+..
+    This means that the server was not started, 
+    or it was not started where createdb expected it. 
+    Again, 
+    check the installation instructions or consult the administrator.
+
+这个回复表示服务器并未启动，
+又或者它并未以 ``createdb`` 期待的方式启动。
+同样地，
+在遇到这个问题时，
+请检查安装手册，
+或者联系你的系统管理员。
+
+..
+    Another response could be this:
+
+除了以上两种情况之外，
+``createdb`` 还可能会回复一条包含了你的 PostgreSQL 用户名的错误信息：
+
+.. code-block:: bash
+
+    createdb: could not connect to database postgres: FATAL:  role "joe" does not exist
+
+..
+    where your own login name is mentioned. 
+    This will happen if the administrator has not created a PostgreSQL user account for you. 
+    (PostgreSQL user accounts are distinct from operating system user accounts.) 
+
+    If you are the administrator, 
+    see Chapter 20 for help creating accounts. 
+
+    You will need to become the operating system user 
+    under which PostgreSQL was installed (usually postgres)
+    to create the first user account. 
+
+    It could also be that 
+    you were assigned a PostgreSQL user name 
+    that is different from your operating system user name; 
+    in that case 
+    you need to use the -U switch or set the PGUSER environment variable 
+    to specify your PostgreSQL user name.
+
+当你的系统管理员没有为你创建 PostgreSQL 用户账号的时候，
+这种回复就会出现。
+（注意，
+PostgreSQL 的用户账号和操作系统的用户账号并不是一回事。）
+
+如果你就是系统管理员，
+那么请查看本文档的第 20 章，
+学习创建用户的具体步骤。
+为了创建第一个 PostgreSQL 用户账号，
+你将需要成为安装了 PostgreSQL 的那个操作系统用户组属下的用户（这个用户组通常被命名为 ``postgres`` ）。
+
+还有一种可能出现的情况，
+就是分配给你的 PostgreSQL 用户名和你的操作系统用户名并不相同；
+在这种情况下，
+你就需要使用 ``-U`` 去切换或者设置 ``PGUSER`` 环境变量，
+从而指定你的 PostgreSQL 用户名。
+
+..
+    If you have a user account 
+    but it does not have the privileges required to create a database, 
+    you will see the following:
+
+如果你拥有了一个账号，
+但该账号并不具备创建数据库所需的权限，
+那么你将看见以下信息：
+
+.. code-block:: bash
+
+    createdb: database creation failed: ERROR:  permission denied to create database
+
+..
+    Not every user has authorization to create new databases. 
+    If PostgreSQL refuses to create databases for you 
+    then the site administrator needs to grant you permission to create databases. 
+    Consult your site administrator if this occurs. 
+    If you installed PostgreSQL yourself 
+    then you should log in for the purposes of this tutorial 
+    under the user account that you started the server as.\ [#f1]_
+
+如果你遇到了这种情况，
+那么说明你并不具备创建新数据库所需的权限。
+为此，
+你需要联系系统管理员，
+让他授予（grant）你创建数据库的权力。
+如果你是自己安装 PostgreSQL 的，
+那么为了执行这个教程里面展示的操作，
+你需要登录启动 PostgreSQL 服务器时使用的那个账号。
+
+..
+    You can also create databases with other names. 
+    PostgreSQL allows you to create any number of databases at a given site. 
+    Database names must have an alphabetic first character 
+    and are limited to 63 bytes in length. 
+    A convenient choice is to create a database with the same name as your current user name. 
+    Many tools assume that database name as the default, 
+    so it can save you some typing. 
+    To create that database, 
+    simply type:
+
+PostgreSQL 允许用户在同一台机器上面创建任意数量的数据库，
+因此除了上面提到的 ``mydb`` 之外，
+用户还可以创建其他不同名字的数据库。
+数据库名字必须以英文字母开头，
+并且长度不能超过 63 个字节。
+一种常见的做法是创建一个与当前用户名字相同的数据库。
+很多工具都会假设用户的名字就是数据库的名字，
+并通过这一假设来减少用户需要输入的字符数量。
+要创建一个与用户名同名的数据库，
+用户只需要直接执行以下命令就可以了：
+
+.. code-block:: bash
+
+    $ createdb
+
+..
+    If you do not want to use your database anymore you can remove it.
+    For example, 
+    if you are the owner (creator) of the database mydb, 
+    you can destroy it using the following command:
+
+当你不再想要使用数据库的时候，
+你可以考虑移除它。
+比如说，
+如果你是 ``mydb`` 数据库的拥有者（创建者），
+那么你可以使用以下命令来销毁它：
+
+.. code-block:: bash
+
+    $ dropdb mydb
+
+..
+    (For this command, 
+    the database name does not default to the user account name. 
+    You always need to specify it.)
+    This action physically removes all files associated with the database and cannot be undone, 
+    so this should only be done with a great deal of forethought.
+
+``dropdb`` 命令将从物理上移除与 ``mydb`` 数据库有关的所有文件，
+并且这个操作是无法撤销的，
+因此你在执行 ``dropdb`` 的时候一定要三思而后行。
+跟 ``createdb`` 命令一样，
+如果被移除的数据库跟用户名同名，
+那么用户只需要执行 ``dropdb`` 就可以直接删除与用户名同名的那个数据库。
+
+..
+    More about createdb and dropdb can be found in createdb and dropdb respectively.
+
+要了解关于 ``createdb`` 命令和 ``dropdb`` 命令的更多信息，
+请参考 `createdb <http://www.postgresql.org/docs/9.5/static/app-createdb.html>`_ 的文档和 `dropdb <http://www.postgresql.org/docs/9.5/static/app-dropdb.html>`_ 的文档。
+
+.. 注释 1
+    .. [#f1] As an explanation for why this works: PostgreSQL user names are separate from operating system user accounts. When you connect to a database, you can choose what PostgreSQL user name to connect as; if you don't, it will default to the same name as your current operating system account. As it happens, there will always be a PostgreSQL user account that has the same name as the operating system user that started the server, and it also happens that that user always has permission to create databases. Instead of logging in as that user you can also specify the -U option everywhere to select a PostgreSQL user name to connect as.
