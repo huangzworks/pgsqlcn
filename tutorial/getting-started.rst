@@ -428,3 +428,173 @@ PostgreSQL 允许用户在同一台机器上面创建任意数量的数据库，
 
 .. 注释 1
     .. [#f1] As an explanation for why this works: PostgreSQL user names are separate from operating system user accounts. When you connect to a database, you can choose what PostgreSQL user name to connect as; if you don't, it will default to the same name as your current operating system account. As it happens, there will always be a PostgreSQL user account that has the same name as the operating system user that started the server, and it also happens that that user always has permission to create databases. Instead of logging in as that user you can also specify the -U option everywhere to select a PostgreSQL user name to connect as.
+
+
+访问数据库
+-------------
+
+..
+    Once you have created a database, you can access it by:
+
+    - Running the PostgreSQL interactive terminal program, called **psql** , 
+      which allows you to interactively enter, edit, and execute SQL commands.
+
+    - Using an existing graphical frontend tool like pgAdmin 
+      or an office suite with ODBC or JDBC support to create and manipulate a database. 
+      These possibilities are not covered in this tutorial.
+
+    - Writing a custom application, 
+      using one of the several available language bindings. 
+      These possibilities are discussed further in Part IV.
+
+    You probably want to start up psql to try the examples in this tutorial. 
+    It can be activated for the mydb database by typing the command:
+
+在创建了数据库之后，
+我们就可以通过以下几种方法去访问数据库：
+
+- 运行名为 **psql** 的 PostgreSQL 交互终端程序，
+  这个程序允许用户交互式地输入、编辑和执行 SQL 命令。
+
+- 使用类似 pgAdmin 这样的图形前端工具，
+  又或者带有 ODBC 或 JDBC 支持的 office 套件来创建和操作数据库。
+
+- 在多种可用的语言绑定里面，
+  选择一种去编写一个定制的程序。
+  本文档的第 4 章列出了所有可选的语言绑定。
+
+本教程将使用 ``psql`` 程序来展示如何执行数据库命令。
+要通过 ``psql`` 程序来访问 ``mydb`` 数据库，
+我们可以执行以下命令：
+
+.. code-block:: bash
+
+    $ psql mydb
+
+..
+    If you do not supply the database name then it will default to your user account name. 
+    You already discovered this scheme in the previous section using createdb.
+
+跟之前介绍的 ``createdb`` 和 ``dropdb`` 一样，
+如果用户在执行 ``psql`` 程序的时候，
+没有指定要访问的数据库，
+那么 ``psql`` 将访问与用户的用户名同名的数据库。
+
+..
+    In ``psql`` , you will be greeted with the following message:
+
+在进入 ``psql`` 程序之后，
+你将看到以下信息：
+
+.. code-block:: psql
+
+    psql (9.5alpha2)
+    Type "help" for help.
+
+    mydb=>
+
+..
+    The last line could also be:
+
+在某些情况下，
+消息的最后一行也可能是这样的：
+
+.. code-block:: psql
+
+    mydb=#
+
+..
+    That would mean you are a database superuser, 
+    which is most likely the case 
+    if you installed PostgreSQL yourself. 
+    Being a superuser means that you are not subject to access controls. 
+    For the purposes of this tutorial that is not important.
+
+这意味着你是数据库的超级用户。
+如果你是自己亲自安装 PostgreSQL 的话，
+那么你通常就会是这种超级用户。
+
+成为超级管理员意味着你将不受制于访问控制规则，
+但对于本教程要展示的内容来说，
+用户是否超级管理员并不重要。
+
+..
+    If you encounter problems starting psql then go back to the previous section. 
+    The diagnostics of createdb and psql are similar, 
+    and if the former worked the latter should work as well.
+
+如果你在启动 ``psql`` 程序的时候遇上了问题，
+那么请阅读前一个小节。
+因为 ``createdb`` 和 ``psql`` 可能遇上的问题都是相似的，
+所以如果 ``createdb`` 能够成功运作，
+那么 ``psql`` 一般也不会出现什么问题。
+
+..
+    The last line printed out by psql is the prompt, 
+    and it indicates that psql is listening to you 
+    and that you can type SQL queries into a work space maintained by psql. 
+    Try out these commands:
+
+``psql`` 打印的最后一行为提示符（prompt），
+它意味着 ``psql`` 正在等候你的指示，
+这时你就可以将 SQL 查询语句键入到 ``psql`` 维护的工作空间（work space）当中。
+你可以尝试键入以下语句：
+
+.. code-block:: psql
+
+    mydb=> SELECT version();
+    version
+    -----------------------------------------------------------------------
+    PostgreSQL 9.5alpha2 on i586-pc-linux-gnu, compiled by GCC 2.96, 32-bit
+    (1 row)
+
+    mydb=> SELECT current_date;
+    date
+    ------------
+    2002-08-31
+    (1 row)
+
+    mydb=> SELECT 2 + 2;
+    ?column?
+    ----------
+    4
+    (1 row)
+
+..
+    The psql program has a number of internal commands that are not SQL commands. 
+    They begin with the backslash character, "\". 
+    For example, 
+    you can get help on the syntax of various PostgreSQL SQL commands by typing:
+
+``psql`` 程序有几个不属于 SQL 命令的内部命令，
+这些命令都以反斜线符号 ``"\"`` 开头。
+举个例子，
+你可以通过输入以下命令来获得关于不同 PostgreSQL SQL 命令的语法帮助信息：
+
+.. code-block:: psql
+
+    mydb=> \h
+
+..
+    To get out of psql, type:
+
+要退出 ``psql`` ，
+你可以输入：
+
+.. code-block:: psql
+
+    mydb=> \q
+
+..
+    and psql will quit and return you to your command shell. 
+    (For more internal commands, type \? at the psql prompt.)
+    The full capabilities of psql are documented in psql. 
+    In this tutorial we will not use these features explicitly, 
+    but you can use them yourself when it is helpful.
+
+然后 ``psql`` 就会退出并返回至你原来的命令行。
+（要了解更多内部命令，
+请在 ``psql`` 提示符中输入 ``\?`` 。）
+`psql 的文档 <http://www.postgresql.org/docs/9.5/static/app-psql.html>`_ 记录了 ``psql`` 的各项特性，
+这个文档并不会显式地使用这些特性，
+但你可以在需要的时候自行使用它们。
