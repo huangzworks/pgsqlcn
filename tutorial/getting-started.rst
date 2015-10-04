@@ -549,15 +549,15 @@ PostgreSQL 允许用户在同一台机器上面创建任意数量的数据库，
     (1 row)
 
     mydb=> SELECT current_date;
-    date
+        date
     ------------
-    2002-08-31
+     2002-08-31
     (1 row)
 
     mydb=> SELECT 2 + 2;
-    ?column?
+     ?column?
     ----------
-    4
+            4
     (1 row)
 
 ..
