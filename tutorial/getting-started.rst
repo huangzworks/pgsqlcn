@@ -543,7 +543,7 @@ PostgreSQL 允许用户在同一台机器上面创建任意数量的数据库，
 .. code-block:: psql
 
     mydb=> SELECT version();
-    version
+                                  version
     -----------------------------------------------------------------------
     PostgreSQL 9.5alpha2 on i586-pc-linux-gnu, compiled by GCC 2.96, 32-bit
     (1 row)
