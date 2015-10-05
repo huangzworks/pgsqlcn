@@ -251,9 +251,121 @@ PostgreSQL 中的类型名都不是语法上的关键字（key words）。
 
 最后，
 如果你不再需要某个表格，
-又或者你想要以不同的定义重新创建某个表格，
+又或者想要以不同的定义重新创建某个表格，
 那么你可以使用以下命令去移除那个表格：
 
 ::
 
     DROP TABLE tablename;
+
+
+将行插入到表格
+-------------------
+
+..
+    The INSERT statement is used to populate a table with rows:
+
+``INSERT`` 语句用于将一个行插入到表格里面：
+
+::
+
+    INSERT INTO weather VALUES ('San Francisco', 46, 50, 0.25, '1994-11-27');
+
+..
+    Note that all data types use rather obvious input formats. 
+    Constants that are not simple numeric values usually must be surrounded by single quotes ('), 
+    as in the example. 
+    The date type is actually quite flexible in what it accepts, 
+    but for this tutorial we will stick to the unambiguous format shown here.
+
+注意所有数据类型都使用相当明显的输入格式。
+非数字值的常量通常由单引号 ``'`` 包围，
+就像上面的例子所展示的那样。
+数据类型在接受输入方面实际上是非常灵活的，
+不过在这个教程里面，
+我们只会使用那些意义明确的格式。
+
+..
+    The point type requires a coordinate pair as input, 
+    as shown here:
+
+``point`` 类型要求一对坐标点作为输入，
+就像这样：
+
+::
+
+    INSERT INTO cities VALUES ('San Francisco', '(-194.0, 53.0)');
+
+..
+    The syntax used so far requires you to remember the order of the columns. 
+    An alternative syntax allows you to list the columns explicitly:
+
+目前展示过的两种 ``INSERT`` 语法都要求你记住表格中各个列的排列顺序，
+但以下这种语法允许你显式地指定各个值要被插入到哪个列里面：
+
+::
+
+    INSERT INTO weather (city, temp_lo, temp_hi, prcp, date)
+        VALUES ('San Francisco', 43, 57, 0.0, '1994-11-29');
+
+..
+    You can list the columns in a different order if you wish 
+    or even omit some columns, 
+    e.g., if the precipitation is unknown:
+
+通过这种语法，
+用户可以以不同的顺序列出表格中的各个列，
+又或者省略某个列。
+比如说，
+如果 ``Hayward`` 城市的降雨量是未知的，
+那么我们可以执行以下 ``INSERT`` 语句：
+
+::
+
+    INSERT INTO weather (date, city, temp_hi, temp_lo)
+        VALUES ('1994-11-29', 'Hayward', 54, 37);
+
+..
+    Many developers consider explicitly listing the columns better style 
+    than relying on the order implicitly.
+
+比起隐式地依赖列的定义顺序，
+很多开发者都认为显式地列出各个列是一种更好的风格。
+
+..
+    Please enter all the commands shown above 
+    so you have some data to work with in the following sections.
+
+请你键入上面展示的所有命令，
+以便获得接下来的章节将要用到的数据。
+
+..
+    You could also have used COPY to load large amounts of data from flat-text files. 
+
+    This is usually faster 
+    because the COPY command is optimized for this application 
+    while allowing less flexibility than INSERT. 
+    An example would be:
+
+用户也可以通过 ``COPY`` 命令，
+从文本文件里面载入大量数据。
+因为 ``COPY`` 命令为这种用法做了优化，
+所以使用 ``COPY`` 命令载入数据的速度一般会比 ``INSERT`` 语句快一些，
+不过 ``COPY`` 命令的灵活性比 ``INSERT`` 语句要差一些。
+
+以下是一个使用 ``COPY`` 命令载入数据的例子：
+
+::
+
+    COPY weather FROM '/home/user/weather.txt';
+
+..
+    where the file name for the source file must be available on the machine running the backend process, 
+    not the client, 
+    since the backend process reads the file directly. 
+    You can read more about the COPY command in COPY.
+
+因为读入源码文件的工作是由后端进程而不是客户端进程负责执行的，
+所以用户指示 ``COPY`` 命令去读取的源码文件必须对正在运行后端进程的机器可用。
+要了解关于 ``COPY`` 命令的更多信息，
+请查看 `COPY 命令的文档 <http://www.postgresql.org/docs/9.5/static/sql-copy.html>`_\ 。
