@@ -369,3 +369,224 @@ PostgreSQL 中的类型名都不是语法上的关键字（key words）。
 所以用户指示 ``COPY`` 命令去读取的源码文件必须对正在运行后端进程的机器可用。
 要了解关于 ``COPY`` 命令的更多信息，
 请查看 `COPY 命令的文档 <http://www.postgresql.org/docs/9.5/static/sql-copy.html>`_\ 。
+
+
+表格查询
+-------------
+
+..
+    To retrieve data from a table, 
+    the table is queried. 
+
+    An SQL SELECT statement is used to do this. 
+
+    The statement is divided into a select list 
+    (the part that lists the columns to be returned),
+    a table list 
+    (the part that lists the tables from which to retrieve the data), 
+    and an optional qualification 
+    (the part that specifies any restrictions). 
+
+    For example, 
+    to retrieve all the rows of table weather, 
+    type:
+
+为了从表格里面获取数据，
+我们需要对表格进行\ *查询*\ 。
+查询一般由 SQL 的 ``SELECT`` 语句负责执行，
+一条 ``SELECT`` 语句通常由一个选择列表（select list）、一个表格列表（table list）以及一个可选的条件构成：
+其中选择列表用于指定需要返回的列，
+表格列表用于指定 ``SELECT`` 语句需要从哪个表格里面获取数据，
+而可选的条件则用于指定查询时的限制条件。
+
+举个例子，
+要从 ``weather`` 表格里面获取所有行，
+我们可以输入以下语句：
+
+::
+
+    SELECT * FROM weather;
+
+..
+    Here * is a shorthand for "all columns". [#f1]_ 
+    So the same result would be had with:
+
+上面这个查询语句中的 ``*`` 号代表“所有列”，
+因此这个语句的查询结果和以下这个语句完全一样：
+
+::
+
+    SELECT city, temp_lo, temp_hi, prcp, date FROM weather;
+
+..
+    The output should be:
+
+这两条 ``SELECT`` 语句的结果为：
+
+::
+
+         city      | temp_lo | temp_hi | prcp |    date
+    ---------------+---------+---------+------+------------
+     San Francisco |      46 |      50 | 0.25 | 1994-11-27
+     San Francisco |      43 |      57 |    0 | 1994-11-29
+     Hayward       |      37 |      54 |      | 1994-11-29
+    (3 rows)
+
+..
+    You can write expressions, 
+    not just simple column references, 
+    in the select list. 
+    For example, 
+    you can do:
+
+除了编写简单的列引用之外，
+用户还可以在选择列表里面编写表达式，
+就像这样：
+
+::
+
+    SELECT city, (temp_hi+temp_lo)/2 AS temp_avg, date FROM weather;
+
+..
+    This should give:
+
+上面的这个语句将产生以下结果：
+
+::
+
+         city      | temp_avg |    date
+    ---------------+----------+------------
+     San Francisco |       48 | 1994-11-27
+     San Francisco |       50 | 1994-11-29
+     Hayward       |       45 | 1994-11-29
+    (3 rows)
+
+..
+    Notice how the AS clause is used to relabel the output column. 
+    (The AS clause is optional.)
+
+注意 ``AS`` 语句是如何对输出的列进行重命名的。（\ ``AS`` 语句是可选的。）
+
+..
+    A query can be "qualified" by adding a WHERE clause 
+    that specifies which rows are wanted. 
+
+    The WHERE clause contains a Boolean (truth value) expression, 
+    and only rows for which the Boolean expression is true are returned. 
+    
+    The usual Boolean operators (AND, OR, and NOT) are allowed in the qualification. 
+    
+    For example, 
+    the following retrieves the weather of San Francisco on rainy days:
+
+查询可以通过添加 ``WHERE`` 语句来指定哪些行能够被返回。
+
+``WHERE`` 语句包含一个布尔（真值）表达式，
+只有哪些能够让布尔表达式返回真值的行会被返回。
+``WHERE`` 语句的表达式可以包含常用的布尔操作符，
+比如 ``AND`` 、 ``OR`` 和 ``NOT`` 。
+举个例子，
+以下这个语句只会返回 San Francisco 在雨天时的天气：
+
+::
+
+    SELECT * FROM weather
+        WHERE city = 'San Francisco' AND prcp > 0.0;
+..
+    Result:
+
+执行上面这个语句将得到以下结果：
+
+::
+
+         city      | temp_lo | temp_hi | prcp |    date
+    ---------------+---------+---------+------+------------
+     San Francisco |      46 |      50 | 0.25 | 1994-11-27
+    (1 row)
+
+..
+    You can request that the results of a query be returned in sorted order:
+
+通过使用可选的 ``ORDER BY`` 语句，
+用户可以让查询结果以有序的方式返回：
+
+::
+
+    SELECT * FROM weather
+        ORDER BY city;
+
+..
+    Result:
+
+执行上面这个语句将得到以下结果：
+
+::
+
+         city      | temp_lo | temp_hi | prcp |    date
+    ---------------+---------+---------+------+------------
+     Hayward       |      37 |      54 |      | 1994-11-29
+     San Francisco |      43 |      57 |    0 | 1994-11-29
+     San Francisco |      46 |      50 | 0.25 | 1994-11-27
+
+..
+    In this example, 
+    the sort order isn't fully specified, 
+    and so you might get the San Francisco rows in either order. 
+    But you'd always get the results shown above if you do:
+
+在这个例子中，
+排序结构并未完全被指定，
+因此 San Francisco 的两个行可能会以不同的顺序被返回。
+但通过执行以下语句，
+我们可以让查询结果总是以相同的顺序返回：
+
+::
+
+    SELECT * FROM weather
+        ORDER BY city, temp_lo;
+
+..
+    You can request that duplicate rows be removed from the result of a query:
+
+通过执行以下查询，
+我们可以移除查询结果中重复出现的行：
+
+::
+
+    SELECT DISTINCT city
+        FROM weather;
+
+..
+    Result:
+
+执行上面这个语句将得到以下结果：
+
+::
+
+        city
+    ---------------
+    Hayward
+    San Francisco
+    (2 rows)
+
+..
+    Here again, 
+    the result row ordering might vary. 
+    You can ensure consistent results by using DISTINCT and ORDER BY together: [#f2]_
+
+跟前面的情况类似，
+上面的语句产生的结果可能会以不同的顺序被返回。
+但通过同时使用 ``DISTINCT`` 和 ``ORDER BY`` ，
+我们可以确保查询结果总是有序的、并且不会出现重复的结果：
+
+::
+
+    SELECT DISTINCT city
+        FROM weather
+            ORDER BY city;
+
+..  脚注
+    [f1] 
+    While SELECT * is useful for off-the-cuff queries, it is widely considered bad style in production code, since adding a column to the table would change the results.
+    [2] 
+    In some database systems, including older versions of PostgreSQL, the implementation of DISTINCT automatically orders the rows and so ORDER BY is unnecessary. But this is not required by the SQL standard, and current PostgreSQL does not guarantee that DISTINCT causes the rows to be ordered.
