@@ -133,3 +133,127 @@ SQL 并不会以任何方式保证行在表格中的位置。
 
 不同的表格会被组织到不同的数据库里面，
 而由单个 PostgreSQL 服务器实例（instance）管理的多个数据库则构成了一个数据库\ *集群*\ （cluster）。
+
+
+创建新的表格
+---------------------
+
+..
+    You can create a new table by specifying the table name, 
+    along with all column names and their types:
+
+通过为表格指定一个名字，
+并为表格的所有列指定名字和类型，
+我们可以创建出一个新的表格：
+
+::
+
+    CREATE TABLE weather (
+        city            varchar(80),
+        temp_lo         int,           -- 最低温度
+        temp_hi         int,           -- 最高温度
+        prcp            real,          -- 降雨量（precipitation）
+        date            date
+    );
+
+..
+    You can enter this into psql with the line breaks. 
+    psql will recognize that the command is not terminated 
+    until the semicolon.
+
+在输入表格的定义时，
+你可以在定义中加入空行，
+``psql`` 会正确地识别这些空行，
+并将分号 ``;`` 看做是输入的终结。
+
+..
+    White space (i.e., spaces, tabs, and newlines) can be used freely in SQL commands. 
+    That means you can type the command aligned differently than above, 
+    or even all on one line. 
+    Two dashes ("--") introduce comments. 
+    Whatever follows them is ignored up to the end of the line. 
+    SQL is case insensitive about key words and identifiers, 
+    except when identifiers are double-quoted to preserve the case (not done above).
+
+用户可以自由地在 SQL 命令中使用空白（包括空格、制表符和新行）。
+这意味着用户可以以不同的对齐方式输入上面展示的命令，
+又或者将所有命令都放到同一行里面。
+两个破折号 ``--`` 用于引出注释，
+位于注释之后的内容将被忽略，
+注释的效果会一直延续到那一行的结尾。
+在一般情况下，
+SQL 并不会区分关键词和标识符的大小写，
+除非用户使用双引号去显式地保留标识符的大小写
+（上面展示的例子并没有这样做）。
+
+..
+    varchar(80) specifies a data type 
+    that can store arbitrary character strings up to 80 characters in length. 
+    int is the normal integer type. 
+    real is a type for storing single precision floating-point numbers. 
+    date should be self-explanatory. 
+    (Yes, 
+    the column of type date is also named date. 
+    This might be convenient or confusing — you choose.)
+
+``varchar(80)`` 指定了一种数据类型，
+这种数据类型可以储存包含任意字符的字符串，
+但这个字符串的长度不能超过 80 个字。
+``int`` 是标准的整数类型。
+``real`` 类型用于储存单精度浮点数。
+``date`` 类型则用于储存日期。
+（在上面的定义中，
+名字为 ``date`` 的列的数据类型同样为 ``date`` ，
+这种做法到底是好是坏则是一个见仁见智的问题。）
+
+..
+    PostgreSQL supports the standard SQL types int, smallint, real, double precision, char(N), varchar(N), date, time, timestamp, and interval, 
+    as well as other types of general utility 
+    and a rich set of geometric types. 
+
+    PostgreSQL can be customized with an arbitrary number of user-defined data types. 
+
+    Consequently, 
+    type names are not key words in the syntax, 
+    except where required to support special cases in the SQL standard.
+
+PostgreSQL 支持包括 ``int`` 、 ``smallint`` 、 ``real`` 、 双精度浮点数、 ``char(N)`` 、 ``varchar(N)`` 、 ``date`` 、 ``timestamp`` 、 ``interval`` 在内的标准 SQL 类型，
+一些通用类型（general utility）以及一系列丰富多样的地理类型（geometric types）。
+除此之外，
+PostgreSQL 还允许用户自行制定任意数量的用户定义数据类型（user-defined data types）。
+因为这个原因，
+除了那些 SQL 标准中定义的数据类型之外，
+PostgreSQL 中的类型名都不是语法上的关键字（key words）。
+
+..
+    The second example will store cities and their associated geographical location:
+
+第二个表定义将展示如何储存城市以及城市的地理位置：
+
+::
+
+    CREATE TABLE cities (
+        name            varchar(80),
+        location        point
+    );
+
+..
+    The point type is an example of a PostgreSQL-specific data type.
+
+表格定义中展示的 ``point`` 类型是其中一种 PostgreSQL 特有数据类型。
+
+..
+    Finally, 
+    it should be mentioned that 
+    if you don't need a table any longer 
+    or want to recreate it differently 
+    you can remove it using the following command:
+
+最后，
+如果你不再需要某个表格，
+又或者你想要以不同的定义重新创建某个表格，
+那么你可以使用以下命令去移除那个表格：
+
+::
+
+    DROP TABLE tablename;
