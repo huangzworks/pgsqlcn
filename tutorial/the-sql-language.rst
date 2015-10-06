@@ -590,3 +590,289 @@ PostgreSQL 中的类型名都不是语法上的关键字（key words）。
     While SELECT * is useful for off-the-cuff queries, it is widely considered bad style in production code, since adding a column to the table would change the results.
     [2] 
     In some database systems, including older versions of PostgreSQL, the implementation of DISTINCT automatically orders the rows and so ORDER BY is unnecessary. But this is not required by the SQL standard, and current PostgreSQL does not guarantee that DISTINCT causes the rows to be ordered.
+
+
+连接多个表格
+-------------------------
+
+..
+    Thus far, 
+    our queries have only accessed one table at a time. 
+
+    Queries can access multiple tables at once, 
+    or access the same table in such a way that 
+    multiple rows of the table are being processed at the same time. 
+
+    A query that accesses multiple rows of the same or different tables at one time 
+    is called a *join* query. 
+
+    As an example, 
+    say you wish to list all the weather records 
+    together with the location of the associated city. 
+
+    To do that, 
+    we need to compare the city column of each row of the ``weather`` table 
+    with the name column of all rows in the ``cities`` table, 
+    and select the pairs of rows where these values match.
+
+到目前为止，
+本章展示的所有查询每次都只会访问一个表格。
+但实际上，
+查询既可以在同一时间里面访问多个表格，
+又可以在同一时间里面，
+对同一个表格中的多个行进行处理。
+这种在同一时间里面访问相同或者不同表格中的多个行的查询被称为\ *连接*\ 查询。
+
+举个例子，
+假设我们想要在获取所有天气记录的同时，
+将这些记录相关联的城市的地理位置也一并返回。
+为了做到这一点，
+我们需要将 ``weather`` 表格中每个行的 ``city`` 一列的值与 ``cities`` 表格中每个行的 ``name`` 一列的值进行比较，
+并从这两个表格里面选出哪些比较结果相同的配对行（pairs of rows）。
+
+..
+    .. note::
+
+        This is only a conceptual model. 
+        The join is usually performed in a more efficient manner 
+        than actually comparing each possible pair of rows, 
+        but this is invisible to the user.
+
+.. note::
+
+    上面描述的只是一个概念模型。
+    比起一个接一个地对比每个可能被配对的行，
+    连接通常会以一种更为高效的方式执行，
+    不过这对于用户来说是不可见的（invisible）。
+
+..
+    This would be accomplished by the following query:
+
+以下查询可以将天气记录和相关城市的地理位置一并返回：
+
+::
+
+    SELECT *
+        FROM weather, cities
+            WHERE city = name;
+
+::
+
+         city      | temp_lo | temp_hi | prcp |    date    |     name      | location
+    ---------------+---------+---------+------+------------+---------------+-----------
+     San Francisco |      46 |      50 | 0.25 | 1994-11-27 | San Francisco | (-194,53)
+     San Francisco |      43 |      57 |    0 | 1994-11-29 | San Francisco | (-194,53)
+    (2 rows)
+
+..
+    Observe two things about the result set:
+
+查询的执行结果里面有两个需要注意的地方：
+
+..
+    - There is no result row for the city of Hayward. 
+      This is because there is no matching entry in the cities table for Hayward, 
+      so the join ignores the unmatched rows in the weather table. 
+      We will see shortly how this can be fixed.
+
+- 查询结果里面并未包含与 Hayward 城市有关的信息。
+  这是因为 ``cities`` 表格里面并没有记载 Hayward 城市的地理位置，
+  所以连接操作就略去了 ``weather`` 表格中关于 Hayward 城市的未匹配行。
+  我们稍后就会看到解决这个问题的方法。
+
+..
+    - There are two columns containing the city name. 
+      This is correct because the lists of columns from the weather 
+      and cities tables are concatenated. 
+      In practice this is undesirable, 
+      though, 
+      so you will probably want to list the output columns explicitly rather than using *:
+
+- 结果里面有两个列包含了城市的名字，
+  这是因为我们将 ``weather`` 表格和 ``cities`` 表格包含的所有列都连接在了一起。
+  虽然这种行为是正确的，
+  但我们实际上并不想将城市名显示两次，
+  为此，
+  我们可以直接在查询语句的选择列表里面显式地列出所有想要返回的列，
+  而不再使用 ``*`` ：
+
+  ::
+
+      SELECT city, temp_lo, temp_hi, prcp, date, location
+          FROM weather, cities
+              WHERE city = name;
+
+.. **\fix editor highlight
+
+..
+    **Exercise:** Attempt to determine the semantics of this query when the WHERE clause is omitted.
+
+**练习：**\ 思考一下，如果去掉上面的查询语句中的 ``WHERE`` 子句，查询的结果将会变成怎样？
+
+..
+    Since the columns all had different names, 
+    the parser automatically found which table they belong to. 
+    If there were duplicate column names in the two tables 
+    you'd need to qualify the column names to show which one you meant, 
+    as in:
+
+因为 ``weather`` 表格和 ``cities`` 表格的列都有不同的名字，
+所以语法分析器会自动地判断查询语句中的各个列分别属于哪个表格。
+但是，
+如果两个表格里面包含有相同的列名，
+那么用户在输入查询语句的时候，
+就需要在列名的前面加上具体的表格名，
+以此来说明自己想要使用的是哪个列：
+
+::
+
+    SELECT weather.city, weather.temp_lo, weather.temp_hi,
+           weather.prcp, weather.date, cities.location
+        FROM weather, cities
+        WHERE cities.name = weather.city;
+
+..
+    It is widely considered good style to qualify all column names in a join query, 
+    so that the query won't fail 
+    if a duplicate column name is later added to one of the tables.
+
+在执行连接查询的时候显式地标识各个列所属的表格通常被认为是一种良好的风格，
+因为这种做法即使在多个表格拥有相同列名的时候也可以正确地执行。
+
+..
+    Join queries of the kind seen thus far can also be written in this alternative form:
+
+目前展示过的连接查询也可以改写为以下这种形式：
+
+::
+
+    SELECT *
+        FROM weather INNER JOIN cities ON (weather.city = cities.name);
+
+..
+    This syntax is not as commonly used as the one above, 
+    but we show it here to help you understand the following topics.
+
+这种语法并没有前一种语法常见，
+但展示这种语法有助于我们理解接下来要介绍的内容。
+
+..
+    Now we will figure out how we can get the Hayward records back in. 
+
+    What we want the query to do is to scan the weather table
+    and for each row to find the matching cities row(s).
+
+    If no matching row is found 
+    we want some "empty values" to be substituted for the cities table's columns. 
+
+    This kind of query is called an outer join. 
+    (The joins we have seen so far are inner joins.)
+    The command looks like this:
+
+现在让我们来考虑一下，
+如何才能让 Hayward 的天气记录出现在查询结果里面。
+我们想要让查询去扫描 ``weather`` 表格的每个行，
+并寻找其中与 ``cities`` 城市相匹配的行，
+并在没有找到相匹配的行时，
+使用一些“空值”（empty value）去代替 ``cities`` 表格中的列。
+这种查询被称为\ *外连接*\ （outer join），
+而本节前面展示的连接则为\ *内连接*\ （inner join）。
+以下查询可以实现上述的要求：
+
+::
+
+    SELECT *
+        FROM weather LEFT OUTER JOIN cities ON (weather.city = cities.name);
+
+::
+
+         city      | temp_lo | temp_hi | prcp |    date    |     name      | location
+    ---------------+---------+---------+------+------------+---------------+-----------
+     Hayward       |      37 |      54 |      | 1994-11-29 |               |
+     San Francisco |      46 |      50 | 0.25 | 1994-11-27 | San Francisco | (-194,53)
+     San Francisco |      43 |      57 |    0 | 1994-11-29 | San Francisco | (-194,53)
+    (3 rows)
+
+..
+    This query is called a left outer join 
+    because the table mentioned on the left of the join operator 
+    will have each of its rows in the output at least once, 
+    whereas the table on the right will only have those rows output 
+    that match some row of the left table. 
+
+    When outputting a left-table row for which there is no right-table match, 
+    empty (null) values are substituted for the right-table columns.
+
+上面的这个查询被称为\ *左外连接*\ （left outer join），
+因为位于连接操作符左边的表格的每个行至少会在查询结果里面出现一次，
+而位于连接操作符右边的表格的行只会在它与左边表格中的某个行相匹配时出现。
+在返回一个来自于左边表格的行时，
+如果那个行在右边表格里面没有与之相匹配的行，
+那么空缺的那个右边表格的列就会用空值（null）代替。
+
+..
+    **Exercise:** There are also right outer joins and full outer joins. Try to find out what those do.
+
+**练习：**\ 除了左外连接之外，还有右外连接（right outer join）和全外连接（full outer join），请尝试执行这些连接。
+
+..
+    We can also join a table against itself. 
+    This is called a self join. 
+
+    As an example, 
+    suppose we wish to find all the weather records 
+    that are in the temperature range of other weather records. 
+
+    So we need to compare the temp_lo and temp_hi columns of each weather row 
+    to the temp_lo and temp_hi columns of all other weather rows. 
+
+    We can do this with the following query:
+
+除了以上提到的连接方式之外，
+用户还可以将一个表格与它自身进行连接，
+这种连接被称为\ *自连接*\ （self join）。
+
+作为例子，
+假设我们想要根据某个指定的天气记录的温度区间，
+找出位于这个温度区间内的所有天气记录，
+那么我们就需要将 ``weather`` 表格中某个指定行的 ``temp_lo`` 一列和 ``temp_hi`` 一列，
+与 ``weather`` 表格中每个行的 ``temp_lo`` 一列和 ``temp_hi`` 一列进行对比。
+具体的查询语句如下：
+
+::
+
+    SELECT W1.city, W1.temp_lo AS low, W1.temp_hi AS high,
+        W2.city, W2.temp_lo AS low, W2.temp_hi AS high
+        FROM weather W1, weather W2
+        WHERE W1.temp_lo < W2.temp_lo
+        AND W1.temp_hi > W2.temp_hi;
+
+         city      | low | high |     city      | low | high
+    ---------------+-----+------+---------------+-----+------
+     San Francisco |  43 |   57 | San Francisco |  46 |   50
+     Hayward       |  37 |   54 | San Francisco |  46 |   50
+    (2 rows)
+
+..
+    Here we have relabeled the weather table as W1 and W2 
+    to be able to distinguish the left and right side of the join. 
+    
+    You can also use these kinds of aliases in other queries 
+    to save some typing, e.g.:
+
+为了区分位于连接操作左边的表格和右边的表格，
+上面的查询将 ``weather`` 表格重新命名为了 ``W1`` 和 ``W2`` 。
+用户在执行其他查询的时候，
+也可以通过这种方法去减少需要输入的字符，
+比如这样：
+
+::
+
+    SELECT *
+        FROM weather w, cities c
+            WHERE w.city = c.name;
+
+..
+    You will encounter this style of abbreviating quite frequently.
+
+我们将会经常看到这种类型的简化。
