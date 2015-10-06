@@ -876,3 +876,167 @@ PostgreSQL 中的类型名都不是语法上的关键字（key words）。
     You will encounter this style of abbreviating quite frequently.
 
 我们将会经常看到这种类型的简化。
+
+
+聚合函数
+-----------------
+
+Like most other relational database products, PostgreSQL supports aggregate functions. An aggregate function computes a single result from multiple input rows. For example, there are aggregates to compute the count, sum, avg (average), max (maximum) and min (minimum) over a set of rows.
+
+As an example, we can find the highest low-temperature reading anywhere with:
+
+::
+
+    SELECT max(temp_lo) FROM weather;
+
+::
+
+      max
+     -----
+       46
+     (1 row)
+
+If we wanted to know what city (or cities) that reading occurred in, 
+we might try:
+
+::
+
+    SELECT city FROM weather WHERE temp_lo = max(temp_lo);     WRONG
+
+but this will not work 
+since the aggregate max cannot be used in the WHERE clause. 
+(This restriction exists because the WHERE clause determines which rows will be included in the aggregate calculation; so obviously it has to be evaluated before aggregate functions are computed.) 
+However, 
+as is often the case the query can be restated to accomplish the desired result, 
+here by using a subquery:
+
+::
+
+    SELECT city FROM weather
+        WHERE temp_lo = (SELECT max(temp_lo) FROM weather);
+
+::
+
+         city
+    ---------------
+     San Francisco
+    (1 row)
+
+This is OK because the subquery is an independent computation that computes its own aggregate separately from what is happening in the outer query.
+
+Aggregates are also very useful in combination with GROUP BY clauses. For example, we can get the maximum low temperature observed in each city with:
+
+::
+
+    SELECT city, max(temp_lo)
+        FROM weather
+        GROUP BY city;
+
+::
+
+         city      | max
+    ---------------+-----
+     Hayward       |  37
+     San Francisco |  46
+    (2 rows)
+
+which gives us one output row per city. Each aggregate result is computed over the table rows matching that city. We can filter these grouped rows using HAVING:
+
+::
+
+    SELECT city, max(temp_lo)
+        FROM weather
+        GROUP BY city
+        HAVING max(temp_lo) < 40;
+
+::
+
+      city   | max
+    ---------+-----
+     Hayward |  37
+    (1 row)
+
+which gives us the same results for only the cities that have all temp_lo values below 40. Finally, if we only care about cities whose names begin with "S", we might do:
+
+::
+
+    SELECT city, max(temp_lo)
+        FROM weather
+        WHERE city LIKE 'S%'(1)
+        GROUP BY city
+        HAVING max(temp_lo) < 40;
+
+.. note::
+
+    The LIKE operator does pattern matching and is explained in Section 9.7.
+
+It is important to understand the interaction between aggregates and SQL's WHERE and HAVING clauses. The fundamental difference between WHERE and HAVING is this: WHERE selects input rows before groups and aggregates are computed (thus, it controls which rows go into the aggregate computation), whereas HAVING selects group rows after groups and aggregates are computed. Thus, the WHERE clause must not contain aggregate functions; it makes no sense to try to use an aggregate to determine which rows will be inputs to the aggregates. On the other hand, the HAVING clause always contains aggregate functions. (Strictly speaking, you are allowed to write a HAVING clause that doesn't use aggregates, but it's seldom useful. The same condition could be used more efficiently at the WHERE stage.)
+
+In the previous example, we can apply the city name restriction in WHERE, since it needs no aggregate. This is more efficient than adding the restriction to HAVING, because we avoid doing the grouping and aggregate calculations for all rows that fail the WHERE check.
+
+
+更新
+---------
+
+..
+    You can update existing rows using the UPDATE command. 
+    Suppose you discover the temperature readings are all off by 2 degrees after November 28. 
+    You can correct the data as follows:
+
+用户可以通过 ``UPDATE`` 命令对已存在的行进行更新。
+假设你想将 11 月 28 日之后的所有天气记录的温度都降低 2 度，
+那么可以执行以下语句：
+
+::
+
+    UPDATE weather
+        SET temp_hi = temp_hi - 2,  temp_lo = temp_lo - 2
+        WHERE date > '1994-11-28';
+
+..
+    Look at the new state of the data:
+
+以下展示的是更新之后的数据：
+
+::
+
+    SELECT * FROM weather;
+
+         city      | temp_lo | temp_hi | prcp |    date
+    ---------------+---------+---------+------+------------
+     San Francisco |      46 |      50 | 0.25 | 1994-11-27
+     San Francisco |      41 |      55 |    0 | 1994-11-29
+     Hayward       |      35 |      52 |      | 1994-11-29
+    (3 rows)
+
+
+删除
+--------------
+
+Rows can be removed from a table using the DELETE command. Suppose you are no longer interested in the weather of Hayward. Then you can do the following to delete those rows from the table:
+
+::
+
+    DELETE FROM weather WHERE city = 'Hayward';
+
+All weather records belonging to Hayward are removed.
+
+::
+
+    SELECT * FROM weather;
+
+::
+
+         city      | temp_lo | temp_hi | prcp |    date
+    ---------------+---------+---------+------+------------
+     San Francisco |      46 |      50 | 0.25 | 1994-11-27
+     San Francisco |      41 |      55 |    0 | 1994-11-29
+    (2 rows)
+
+One should be wary of statements of the form
+
+::
+
+    DELETE FROM tablename;
+
+Without a qualification, DELETE will remove all rows from the given table, leaving it empty. The system will not request confirmation before doing this!
