@@ -1013,13 +1013,24 @@ In the previous example, we can apply the city name restriction in WHERE, since 
 删除
 --------------
 
-Rows can be removed from a table using the DELETE command. Suppose you are no longer interested in the weather of Hayward. Then you can do the following to delete those rows from the table:
+..
+    Rows can be removed from a table using the DELETE command. 
+    Suppose you are no longer interested in the weather of Hayward. 
+    Then you can do the following to delete those rows from the table:
+
+通过使用 ``DELETE`` 命令，
+用户可以从表格里面移除指定的行。
+假设我们不再对 Hayward 城市的天气记录感兴趣了，
+那么可以通过执行以下命令来移除 Hayward 城市的所有天气记录：
 
 ::
 
     DELETE FROM weather WHERE city = 'Hayward';
 
-All weather records belonging to Hayward are removed.
+..
+    All weather records belonging to Hayward are removed.
+
+这样 Hayward 城市的所有天气记录将被删除。
 
 ::
 
@@ -1033,10 +1044,24 @@ All weather records belonging to Hayward are removed.
      San Francisco |      41 |      55 |    0 | 1994-11-29
     (2 rows)
 
-One should be wary of statements of the form
+..
+    One should be wary of statements of the form
+
+需要注意的是，
+如果用户在执行 ``DELETE`` 命令的时候，
+没有给定删除的条件：
 
 ::
 
     DELETE FROM tablename;
 
-Without a qualification, DELETE will remove all rows from the given table, leaving it empty. The system will not request confirmation before doing this!
+..
+    Without a qualification, 
+    DELETE will remove all rows from the given table, 
+    leaving it empty. 
+    The system will not request confirmation before doing this!
+
+那么 ``DELETE`` 将移除表格中的所有行，
+使得表格变为空，
+并且系统在执行这个操作的时候将不会要求你进行确认，
+所以千万要小心！
