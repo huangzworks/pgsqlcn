@@ -881,9 +881,29 @@ PostgreSQL 中的类型名都不是语法上的关键字（key words）。
 聚合函数
 -----------------
 
-Like most other relational database products, PostgreSQL supports aggregate functions. An aggregate function computes a single result from multiple input rows. For example, there are aggregates to compute the count, sum, avg (average), max (maximum) and min (minimum) over a set of rows.
+..
+    Like most other relational database products, 
+    PostgreSQL supports aggregate functions. 
 
-As an example, we can find the highest low-temperature reading anywhere with:
+    An aggregate function computes a single result from multiple input rows. 
+
+    For example, 
+    there are aggregates to compute the count, sum, avg (average), max (maximum) and min (minimum) 
+    over a set of rows.
+
+跟其他很多关系式数据库产品一样，
+PostgreSQL 也支持\ *聚合函数*\ （aggregate functions）。
+一个聚合函数可以从多个输入行里面计算出单个结果。
+比如说，
+我们可以使用 ``count`` 、 ``sum`` 、 ``avg`` （average，平均值）、 ``max`` （maximum，最大值）、和 ``min`` （minimum，最小值）等聚合函数去对一系列行进行聚合计算。
+
+..
+    As an example, 
+    we can find the highest low-temperature reading anywhere with:
+
+作为例子，
+我们可以使用以下语句，
+从 ``weather`` 表格中找出最低温度的最大值：
 
 ::
 
@@ -896,19 +916,40 @@ As an example, we can find the highest low-temperature reading anywhere with:
        46
      (1 row)
 
-If we wanted to know what city (or cities) that reading occurred in, 
-we might try:
+..
+    If we wanted to know what city (or cities) that reading occurred in, 
+    we might try:
+
+如果我们想要知道这个最低温度的最大值出现在哪个城市，
+那么可能会尝试执行以下查询：
 
 ::
 
     SELECT city FROM weather WHERE temp_lo = max(temp_lo);     WRONG
 
-but this will not work 
-since the aggregate max cannot be used in the WHERE clause. 
-(This restriction exists because the WHERE clause determines which rows will be included in the aggregate calculation; so obviously it has to be evaluated before aggregate functions are computed.) 
-However, 
-as is often the case the query can be restated to accomplish the desired result, 
-here by using a subquery:
+..
+    but this will not work 
+    since the aggregate max cannot be used in the WHERE clause. 
+
+    (This restriction exists 
+    because the WHERE clause determines which rows will be included in the aggregate calculation; 
+    so obviously 
+    it has to be evaluated before aggregate functions are computed.) 
+
+    However, 
+    as is often the case 
+    the query can be restated to accomplish the desired result, 
+    here by using a subquery:
+
+但这个查询语句并不可行，
+因为像 ``max`` 这样的聚合函数是不可以用在 ``WHERE`` 语句里面的。
+（这个限制之所以会存在，
+是因为 ``WHERE`` 语句需要决定哪些行会被包含在聚合计算当中，
+这导致它必须在执行聚合计算之前进行求值，
+所以聚合计算函数是没办法在 ``WHERE`` 语句里面使用的。）
+不过，
+通过使用\ *子查询*\ （subquery），
+我们通常还是可以藉由多执行一次查询来获得想要的结果：
 
 ::
 
@@ -922,9 +963,25 @@ here by using a subquery:
      San Francisco
     (1 row)
 
-This is OK because the subquery is an independent computation that computes its own aggregate separately from what is happening in the outer query.
+..
+    This is OK
+    because the subquery is an independent computation 
+    that computes its own aggregate separately from what is happening in the outer query.
 
-Aggregates are also very useful in combination with GROUP BY clauses. For example, we can get the maximum low temperature observed in each city with:
+这个查询之所以能够正确地执行，
+是因为位于查询内部的子查询是一个独立的计算过程，
+它可以独立地计算自己的聚合结果，
+而不会受到外部查询的影响。
+
+..
+    Aggregates are also very useful in combination with GROUP BY clauses. 
+    For example, 
+    we can get the maximum low temperature observed in each city with:
+
+聚合函数与 ``GROUP BY`` 语句组合起来使用也是非常有用的。
+举个例子，
+通过执行以下查询，
+我们可以找出各个城市观测到的最低温度的最大值：
 
 ::
 
@@ -940,7 +997,15 @@ Aggregates are also very useful in combination with GROUP BY clauses. For exampl
      San Francisco |  46
     (2 rows)
 
-which gives us one output row per city. Each aggregate result is computed over the table rows matching that city. We can filter these grouped rows using HAVING:
+..
+    which gives us one output row per city. 
+    Each aggregate result is computed over the table rows matching that city. 
+    We can filter these grouped rows using HAVING:
+
+上面的语句将为每个城市分别返回一个结果行，
+这些结果行都是通过对表格里面与城市相匹配的行进行聚合计算得出的。
+通过使用 ``HAVING`` ，
+我们可以对分组后的行进行过滤：
 
 ::
 
@@ -956,7 +1021,18 @@ which gives us one output row per city. Each aggregate result is computed over t
      Hayward |  37
     (1 row)
 
-which gives us the same results for only the cities that have all temp_lo values below 40. Finally, if we only care about cities whose names begin with "S", we might do:
+..
+    which gives us the same results 
+    for only the cities that have all temp_lo values below 40. 
+    Finally, 
+    if we only care about cities whose names begin with "S", 
+    we might do:
+
+这个查询会同样会返回城市最低温度的最大值，
+但是只会返回那些最低温度低于 40 度的结果。
+最后，
+如果我们只关心名字以 ``"S"`` 开头的城市的最低温度的最大值，
+那么可以执行以下查询：
 
 ::
 
@@ -966,13 +1042,66 @@ which gives us the same results for only the cities that have all temp_lo values
         GROUP BY city
         HAVING max(temp_lo) < 40;
 
+..
+    .. note::
+
+        The LIKE operator does pattern matching and is explained in Section 9.7.
+
 .. note::
 
-    The LIKE operator does pattern matching and is explained in Section 9.7.
+    查询中的 ``LIKE`` 操作用于执行模式匹配，
+    关于这个操作的详细信息请看本文档的\ `第 9.7 节 <http://www.postgresql.org/docs/9.5/static/functions-matching.html>`_\ 。
 
-It is important to understand the interaction between aggregates and SQL's WHERE and HAVING clauses. The fundamental difference between WHERE and HAVING is this: WHERE selects input rows before groups and aggregates are computed (thus, it controls which rows go into the aggregate computation), whereas HAVING selects group rows after groups and aggregates are computed. Thus, the WHERE clause must not contain aggregate functions; it makes no sense to try to use an aggregate to determine which rows will be inputs to the aggregates. On the other hand, the HAVING clause always contains aggregate functions. (Strictly speaking, you are allowed to write a HAVING clause that doesn't use aggregates, but it's seldom useful. The same condition could be used more efficiently at the WHERE stage.)
+..
+    It is important to understand the interaction between aggregates and SQL's WHERE and HAVING clauses. 
 
-In the previous example, we can apply the city name restriction in WHERE, since it needs no aggregate. This is more efficient than adding the restriction to HAVING, because we avoid doing the grouping and aggregate calculations for all rows that fail the WHERE check.
+    The fundamental difference between WHERE and HAVING is this: 
+    WHERE selects input rows before groups and aggregates are computed 
+    (thus, it controls which rows go into the aggregate computation),
+    whereas HAVING selects group rows after groups and aggregates are computed. 
+
+    Thus, 
+    the WHERE clause must not contain aggregate functions; 
+    it makes no sense to try to use an aggregate to determine which rows will be inputs to the aggregates. 
+
+    On the other hand, 
+    the HAVING clause always contains aggregate functions. 
+
+    (Strictly speaking, 
+    you are allowed to write a HAVING clause that doesn't use aggregates, 
+    but it's seldom useful. 
+    The same condition could be used more efficiently at the WHERE stage.)
+
+了解聚合函数与 SQL 的 ``WHERE`` 语句以及 ``HAVING`` 语句之间的互动行为是非常重要的。
+``WHERE`` 和 ``HAVING`` 的主要区别在于：
+``WHERE`` 用于在进行分组和聚合计算之前选择输入的列
+（因此 ``WHERE`` 控制了哪些列会被进行聚合计算），
+而 ``HAVING`` 则用于在分组完毕和聚合计算进行完毕之后，
+选择已经分好了组的行。
+
+因为上述原因，
+``WHERE`` 语句不能包含任意聚合函数；
+尝试使用一个聚合函数去判断哪些行能够成为聚合函数的输入是没有意义的。
+另一方面，
+``HAVING`` 语句总是包含着聚合函数。
+（严格来说，
+用户还是可以编写一个不包含任何聚合函数的 ``HAVING`` 语句，
+只是这种语句很少会有用，
+因为相同的条件在 ``WHERE`` 阶段可以更高效地执行。）
+
+..
+    In the previous example, 
+    we can apply the city name restriction in WHERE, 
+    since it needs no aggregate. 
+    This is more efficient than adding the restriction to HAVING, 
+    because we avoid doing the grouping and aggregate calculations 
+    for all rows that fail the WHERE check.
+
+在前面的例子中，
+因为城市的名字并不需要进行聚合计算，
+所以我们可以使用 ``WHERE`` 语句去对城市的名字进行限制。
+并且由于这种做法不需要对那些不能通过 ``WHERE`` 语句检查的行进行分组和聚合计算，
+所以它的效率比使用 ``HAVING`` 语句去进行限制要高效得多。
 
 
 更新
