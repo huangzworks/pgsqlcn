@@ -1,0 +1,180 @@
+数据操作
+==============
+
+The previous chapter discussed how to create tables and other structures to hold your data. Now it is time to fill the tables with data. This chapter covers how to insert, update, and delete table data. The chapter after this will finally explain how to extract your long-lost data from the database.
+
+插入数据
+--------------
+
+When a table is created, it contains no data. The first thing to do before a database can be of much use is to insert data. Data is conceptually inserted one row at a time. Of course you can also insert more than one row, but there is no way to insert less than one row. Even if you know only some column values, a complete row must be created.
+
+To create a new row, use the INSERT command. The command requires the table name and column values. For example, consider the products table from Chapter 5:
+
+::
+
+    CREATE TABLE products (
+        product_no integer,
+        name text,
+        price numeric
+    );
+
+An example command to insert a row would be:
+
+::
+
+    INSERT INTO products VALUES (1, 'Cheese', 9.99);
+
+The data values are listed in the order in which the columns appear in the table, separated by commas. Usually, the data values will be literals (constants), but scalar expressions are also allowed.
+
+The above syntax has the drawback that you need to know the order of the columns in the table. To avoid this you can also list the columns explicitly. For example, both of the following commands have the same effect as the one above:
+
+::
+
+    INSERT INTO products (product_no, name, price) VALUES (1, 'Cheese', 9.99);
+    INSERT INTO products (name, price, product_no) VALUES ('Cheese', 9.99, 1);
+
+Many users consider it good practice to always list the column names.
+
+If you don't have values for all the columns, you can omit some of them. In that case, the columns will be filled with their default values. For example:
+
+::
+
+    INSERT INTO products (product_no, name) VALUES (1, 'Cheese');
+    INSERT INTO products VALUES (1, 'Cheese');
+
+The second form is a PostgreSQL extension. It fills the columns from the left with as many values as are given, and the rest will be defaulted.
+
+For clarity, you can also request default values explicitly, for individual columns or for the entire row:
+
+::
+
+    INSERT INTO products (product_no, name, price) VALUES (1, 'Cheese', DEFAULT);
+    INSERT INTO products DEFAULT VALUES;
+
+You can insert multiple rows in a single command:
+
+::
+
+    INSERT INTO products (product_no, name, price) VALUES
+        (1, 'Cheese', 9.99),
+        (2, 'Bread', 1.99),
+        (3, 'Milk', 2.99);
+
+.. tip:: When inserting a lot of data at the same time, considering using the COPY command. It is not as flexible as the INSERT command, but is more efficient. Refer to Section 14.4 for more information on improving bulk loading performance.
+
+
+更新数据
+--------------
+
+The modification of data that is already in the database is referred to as updating. You can update individual rows, all the rows in a table, or a subset of all rows. Each column can be updated separately; the other columns are not affected.
+
+To update existing rows, use the UPDATE command. This requires three pieces of information:
+
+1. The name of the table and column to update
+
+2. The new value of the column
+
+3. Which row(s) to update
+
+Recall from Chapter 5 that SQL does not, in general, provide a unique identifier for rows. Therefore it is not always possible to directly specify which row to update. Instead, you specify which conditions a row must meet in order to be updated. Only if you have a primary key in the table (independent of whether you declared it or not) can you reliably address individual rows by choosing a condition that matches the primary key. Graphical database access tools rely on this fact to allow you to update rows individually.
+
+For example, this command updates all products that have a price of 5 to have a price of 10:
+
+::
+
+    UPDATE products SET price = 10 WHERE price = 5;
+
+This might cause zero, one, or many rows to be updated. It is not an error to attempt an update that does not match any rows.
+
+Let's look at that command in detail. First is the key word ``UPDATE`` followed by the table name. As usual, the table name can be schema-qualified, otherwise it is looked up in the path. Next is the key word ``SET`` followed by the column name, an equal sign, and the new column value. The new column value can be any scalar expression, not just a constant. For example, if you want to raise the price of all products by 10% you could use:
+
+::
+
+    UPDATE products SET price = price * 1.10;
+
+As you see, the expression for the new value can refer to the existing value(s) in the row. We also left out the ``WHERE`` clause. If it is omitted, it means that all rows in the table are updated. If it is present, only those rows that match the ``WHERE`` condition are updated. Note that the equals sign in the SET clause is an assignment while the one in the ``WHERE`` clause is a comparison, but this does not create any ambiguity. Of course, the ``WHERE`` condition does not have to be an equality test. Many other operators are available (see Chapter 9). But the expression needs to evaluate to a Boolean result.
+
+You can update more than one column in an UPDATE command by listing more than one assignment in the SET clause. For example:
+
+::
+
+    UPDATE mytable SET a = 5, b = 3, c = 1 WHERE a > 0;
+
+
+删除数据
+--------------
+
+..
+    So far we have explained how to add data to tables 
+    and how to change data. 
+
+    What remains is to discuss how to remove data 
+    that is no longer needed. 
+
+    Just as adding data is only possible in whole rows, 
+    you can only remove entire rows from a table. 
+
+    In the previous section 
+    we explained that SQL does not provide a way to directly address individual rows. 
+
+    Therefore, 
+    removing rows can only be done 
+    by specifying conditions that the rows to be removed have to match. 
+
+    If you have a primary key in the table 
+    then you can specify the exact row. 
+
+    But you can also remove groups of rows matching a condition, 
+    or you can remove all rows in the table at once.
+
+到目前为止，
+我们学习了将数据添加到表格里面的方法，
+以及对表格里面的数据进行修改的方法，
+那么我们剩下要学习的自然就是移除表格中无用数据的方法了。
+
+就像添加数据时需要将整个行添加到表格里面一样，
+要从表格里面移除数据，
+我们也必须移除整个行。
+上一节曾经提到过，
+SQL 并没有提供能够直接访问某个单独的行的方法。
+因此，
+行的移除操作只能通过指定与被移除行相匹配的条件来完成。
+
+如果你拥有表格中某个行的主键的话，
+那么你可以通过那个主键来精确地移除那个行。
+除此之外，
+你也可以通过指定条件来删除一组与条件相匹配的行，
+又或者直接一次性地移除表格中的所有行。
+
+..
+    You use the DELETE command to remove rows; 
+    the syntax is very similar to the UPDATE command. 
+    For instance, 
+    to remove all rows from the products table that have a price of 10, use:
+
+删除行需要用到 ``DELETE`` 命令，
+这个命令的语法和 ``UPDATE`` 命令非常相似。
+举个例子，
+通过执行以下命令，
+我们可以从 ``products`` 表格里面移除价格等于 ``10`` 的所有行：
+
+::
+
+    DELETE FROM products WHERE price = 10;
+
+..
+    If you simply write:
+
+另一方面，
+如果我们直接执行以下命令：
+
+::
+
+    DELETE FROM products;
+
+..
+    then all rows in the table will be deleted! 
+    Caveat programmer.
+
+那么 ``products`` 表格中的所有行都将被删除！
+请谨慎地使用这个命令。

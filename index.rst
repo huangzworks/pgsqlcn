@@ -87,3 +87,4 @@ Readers of this part should know how to connect to a PostgreSQL database and iss
    :maxdepth: 2
 
    sql/ddl
+   sql/dml
