@@ -1,14 +1,41 @@
 数据操作
 ==============
 
-The previous chapter discussed how to create tables and other structures to hold your data. Now it is time to fill the tables with data. This chapter covers how to insert, update, and delete table data. The chapter after this will finally explain how to extract your long-lost data from the database.
+..
+    The previous chapter discussed how to create tables and other structures to hold your data. 
+    Now it is time to fill the tables with data. 
+    This chapter covers how to insert, update, and delete table data. 
+    The chapter after this will finally explain how to extract your long-lost data from the database.
+
+前面的章节介绍了创建表格和其他结构的方法，
+并说明了如何使用这些表格和结构去储存数据，
+现在是时候考虑怎样使用数据去填充表格了。
+本章将介绍插入、更新和删除表格数据的方法，
+而之后的一章将介绍如何从表格里面获取已有的数据。
 
 插入数据
 --------------
 
-When a table is created, it contains no data. The first thing to do before a database can be of much use is to insert data. Data is conceptually inserted one row at a time. Of course you can also insert more than one row, but there is no way to insert less than one row. Even if you know only some column values, a complete row must be created.
+When a table is created, 
+it contains no data. 
+The first thing to do before a database can be of much use is to insert data. 
+Data is conceptually inserted one row at a time. 
+Of course you can also insert more than one row, 
+but there is no way to insert less than one row. 
+Even if you know only some column values, 
+a complete row must be created.
 
-To create a new row, use the INSERT command. The command requires the table name and column values. For example, consider the products table from Chapter 5:
+..
+    To create a new row, 
+    use the INSERT command. 
+    The command requires the table name and column values. 
+    For example, 
+    consider the products table from Chapter 5:
+
+``INSERT`` 命令接受表格的名字和列的值作为参数，
+并在表格里面创建一个新行。
+举个例子，
+对于第 5 章介绍的 ``products`` 表格来说：
 
 ::
 
@@ -18,40 +45,103 @@ To create a new row, use the INSERT command. The command requires the table name
         price numeric
     );
 
-An example command to insert a row would be:
+..
+    An example command to insert a row would be:
+
+以下是一个使用 ``INSERT`` 命令去插入新行的例子：
 
 ::
 
     INSERT INTO products VALUES (1, 'Cheese', 9.99);
 
-The data values are listed in the order in which the columns appear in the table, separated by commas. Usually, the data values will be literals (constants), but scalar expressions are also allowed.
+..
+    The data values are listed in the order in which the columns appear in the table, 
+    separated by commas. 
+    Usually, 
+    the data values will be literals (constants), 
+    but scalar expressions are also allowed.
 
-The above syntax has the drawback that you need to know the order of the columns in the table. To avoid this you can also list the columns explicitly. For example, both of the following commands have the same effect as the one above:
+用户需要根据列在表格中的次序，
+逐一列出每个数据值，
+并在每个数据值之间使用逗号进行分割。
+通常情况下，
+数据值都是字面量（literals，也即是常量），
+但使用标量（scalar）作为数据值也是可行的。
+
+..
+    The above syntax has the drawback 
+    that you need to know the order of the columns in the table. 
+
+    To avoid this 
+    you can also list the columns explicitly. 
+
+    For example, 
+    both of the following commands have the same effect as the one above:
+
+上面展示的 ``INSERT`` 语法有一个缺点，
+它要求用户记住各个列在表格中的次序，
+不过这个问题可以通过显式地列出各个列来解决。
+举个例子，
+以下两个命令将产生完全相同的效果：
 
 ::
 
     INSERT INTO products (product_no, name, price) VALUES (1, 'Cheese', 9.99);
     INSERT INTO products (name, price, product_no) VALUES ('Cheese', 9.99, 1);
 
-Many users consider it good practice to always list the column names.
+..
+    Many users consider it good practice to always list the column names.
 
-If you don't have values for all the columns, you can omit some of them. In that case, the columns will be filled with their default values. For example:
+很多用户都认为总是列出各个列的名字是一种更好的编程风格。
+
+..
+    If you don't have values for all the columns, 
+    you can omit some of them. 
+
+    In that case, 
+    the columns will be filled with their default values. 
+    
+    For example:
+
+如果你在插入行的时候，
+缺少某个列的值，
+那么你可以在执行 ``INSERT`` 命令时省略那些没有值的域。
+在这种情况下，
+那些没有被设置值的列将被默认值填充。
+就像这样：
 
 ::
 
     INSERT INTO products (product_no, name) VALUES (1, 'Cheese');
     INSERT INTO products VALUES (1, 'Cheese');
 
-The second form is a PostgreSQL extension. It fills the columns from the left with as many values as are given, and the rest will be defaulted.
+..
+    The second form is a PostgreSQL extension. 
+    It fills the columns from the left with as many values as are given, 
+    and the rest will be defaulted.
 
-For clarity, you can also request default values explicitly, for individual columns or for the entire row:
+第二种语法是 PostgreSQL 的扩展语法：
+这种语法会按照给定值的数量，
+从左到右地填充行的各个列，
+而那些没有给出值的行则使用默认值进行填充。
+
+..
+    For clarity, 
+    you can also request default values explicitly, 
+    for individual columns or for the entire row:
+
+为了保证清晰性，
+用户也可以显式地要求使用默认值去填充某个单独的列或者整个行：
 
 ::
 
     INSERT INTO products (product_no, name, price) VALUES (1, 'Cheese', DEFAULT);
     INSERT INTO products DEFAULT VALUES;
 
-You can insert multiple rows in a single command:
+..
+    You can insert multiple rows in a single command:
+
+用户也可以在一条命令里面插入多个行：
 
 ::
 
@@ -60,7 +150,8 @@ You can insert multiple rows in a single command:
         (2, 'Bread', 1.99),
         (3, 'Milk', 2.99);
 
-.. tip:: When inserting a lot of data at the same time, considering using the COPY command. It is not as flexible as the INSERT command, but is more efficient. Refer to Section 14.4 for more information on improving bulk loading performance.
+..
+    .. tip:: When inserting a lot of data at the same time, considering using the COPY command. It is not as flexible as the INSERT command, but is more efficient. Refer to Section 14.4 for more information on improving bulk loading performance.
 
 
 更新数据
