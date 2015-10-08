@@ -262,6 +262,114 @@ PostgreSQL 提供了数量可观的一系列内置数据类型，
 本章余下的内容将要介绍的是如何通过给表格定义添加额外的特性，
 从而确保数据的完整性和安全性，
 又或者仅仅为了让表格变得更加易于使用。
-如果你现在就急切地想要使用数据去填充自己的表格，
+如果你现在就急切地想要学习使用数据去填充表格的方法，
 那么可以先去阅读本文档的第 6 章，
 之后再转过头来阅读本章剩余的内容。
+
+
+默认值
+-------------------
+
+..
+    A column can be assigned a default value. 
+
+    When a new row is created 
+    and no values are specified for some of the columns, 
+    those columns will be filled with their respective default values. 
+
+    A data manipulation command can also request explicitly 
+    that a column be set to its default value, 
+    without having to know what that value is. 
+
+    (Details about data manipulation commands are in Chapter 6.)
+
+在 PostgreSQL 中，
+用户可以为列赋予一个默认值。
+当用户创建一个新行，
+但是并没有为其中的某些列指定值的时候，
+那些列就会被赋予它们相应的默认值。
+用户也可以通过数据处理命令（data manipulation command），
+明确地将一个列设置为它的默认值，
+并且不需要知道哪个默认值是什么。
+用户还可以通过数据处理命令（data manipulation command），
+明确地为一个列设置默认值，
+并且不需要知道这个默认值到底是什么。
+（本文档的第 6 章将对数据处理命令做更详细的介绍。）
+
+..
+    If no default value is declared explicitly, 
+    the default value is the null value. 
+    This usually makes sense 
+    because a null value can be considered to represent unknown data.
+
+如果一个列没有设置默认值，
+那么它的默认值就是控制。
+这种行为一般都是有意义的，
+因为一个空值可以用于表示未知的数据。
+
+..
+    In a table definition, 
+    default values are listed after the column data type. 
+    For example:
+
+在一个表格定义里面，
+默认值可以在列的数据类型之后列出。
+就像这样：
+
+::
+
+    CREATE TABLE products (
+        product_no integer,
+        name text,
+        price numeric DEFAULT 9.99
+    );
+
+..
+    The default value can be an expression, 
+    which will be evaluated whenever the default value is inserted 
+    (not when the table is created). 
+
+    A common example is for a timestamp column to have a default of ``CURRENT_TIMESTAMP`` , 
+    so that it gets set to the time of row insertion. 
+    Another common example is generating a "serial number" for each row. 
+
+    In PostgreSQL this is typically done by something like:
+
+默认值除了可以是常量之外，
+还可以是一个表达式。
+表达式默认值将在行插入到表格时被求值（而不是在创建表格时被求值）。
+一个比较常见的例子就是，
+通过将 ``CURRENT_TIMESTAMP`` 设置为 ``timestamp`` 列的默认值，
+我们可以让行在插入到表格时，
+将 ``timestamp`` 列的值设置为当时的时间戳。
+使用表达式作为默认值的另一个常见例子，
+是使用默认值去为每个行创建序列号（serial number），
+这种行为可以通过以下代码来实现：
+
+::
+
+    CREATE TABLE products (
+        product_no integer DEFAULT nextval('products_product_no_seq'),
+        ...
+    );
+
+..
+    where the ``nextval()`` function supplies successive values from a sequence object (see Section 9.16). 
+    This arrangement is sufficiently common 
+    that there's a special shorthand for it:
+
+其中 ``nextval()`` 函数负责从序列对象（参见 9.16 节）中获取下一个序列号。
+因为这种做法非常常见，
+所以 PostgreSQL 为其提供了一种等效的快捷方式：
+
+::
+
+    CREATE TABLE products (
+        product_no SERIAL,
+        ...
+    );
+
+..
+    The ``SERIAL`` shorthand is discussed further in Section 8.1.4.
+
+本文档的 8.1.4 节将介绍更多关于 ``SERIAL`` 的信息。
