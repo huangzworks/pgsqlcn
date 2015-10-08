@@ -16,14 +16,27 @@
 插入数据
 --------------
 
-When a table is created, 
-it contains no data. 
-The first thing to do before a database can be of much use is to insert data. 
-Data is conceptually inserted one row at a time. 
-Of course you can also insert more than one row, 
-but there is no way to insert less than one row. 
-Even if you know only some column values, 
-a complete row must be created.
+..
+    When a table is created, 
+    it contains no data. 
+
+    The first thing to do before a database can be of much use is to insert data. 
+
+    Data is conceptually inserted one row at a time. 
+    Of course you can also insert more than one row, 
+    but there is no way to insert less than one row. 
+
+    Even if you know only some column values, 
+    a complete row must be created.
+
+一个新创建的表格是不包含任何数据的。
+为了让一个数据库能够发挥它的实际作用，
+我们必须向数据库里面插入数据。
+插入操作是以行为单位进行的：
+尽管用户可以一次插入多个行，
+但是却不能插入少于一个行的数据 ——
+即使用户在执行插入操作时只给出了某些列的值，
+数据库也会为这个插入操作创建一个完整的行。
 
 ..
     To create a new row, 
