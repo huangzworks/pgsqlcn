@@ -170,35 +170,187 @@
 更新数据
 --------------
 
-The modification of data that is already in the database is referred to as updating. You can update individual rows, all the rows in a table, or a subset of all rows. Each column can be updated separately; the other columns are not affected.
+..
+    The modification of data that is already in the database 
+    is referred to as updating. 
 
-To update existing rows, use the UPDATE command. This requires three pieces of information:
+    You can update individual rows, 
+    all the rows in a table, 
+    or a subset of all rows. 
 
-1. The name of the table and column to update
+    Each column can be updated separately; 
+    the other columns are not affected.
 
-2. The new value of the column
+对已经存在于数据库中的数据进行修改，
+这一操作被称为更新操作。
+用户可以更新表格中的某个行，
+又或者所有行，
+又或者其中一部分行。
+每个列可以单独被更新，
+其他列不会受到影响。
 
-3. Which row(s) to update
+..
+    To update existing rows, 
+    use the UPDATE command. 
+    This requires three pieces of information:
 
-Recall from Chapter 5 that SQL does not, in general, provide a unique identifier for rows. Therefore it is not always possible to directly specify which row to update. Instead, you specify which conditions a row must meet in order to be updated. Only if you have a primary key in the table (independent of whether you declared it or not) can you reliably address individual rows by choosing a condition that matches the primary key. Graphical database access tools rely on this fact to allow you to update rows individually.
+``UPDATE`` 命令可以对一个已经存在的行进行更新，
+这个命令需要三方面的信息：
 
-For example, this command updates all products that have a price of 5 to have a price of 10:
+..
+    1. The name of the table and column to update
+
+    2. The new value of the column
+
+    3. Which row(s) to update
+
+1. 需要更新的表格的名字以及列的名字。
+
+2. 设置给列的新值。
+
+3. 指定需要更新的行。
+
+..
+    Recall from Chapter 5 that SQL does not, 
+    in general, provide a unique identifier for rows. 
+
+    Therefore it is not always possible to directly specify which row to update. 
+
+    Instead, 
+    you specify which conditions a row must meet in order to be updated. 
+
+    Only if you have a primary key in the table 
+    (independent of whether you declared it or not) 
+    can you reliably address individual rows 
+    by choosing a condition that matches the primary key. 
+
+    Graphical database access tools rely on this fact 
+    to allow you to update rows individually.
+
+本文档的第 5 章曾经说过，
+在通常情况下，
+SQL 并不会为每个行都提供一个唯一标识符。
+由于这个原因，
+用户有时候并不能直接指定需要更新的行；
+而是要指定一些条件，
+并通过这些条件来决定表格中的哪些行将被更新。
+
+只有当用户拥有了表格中某个行的主键时，
+他才能够通过选择一个与主键相匹配的条件，
+确实地对某个单独的行进行更新。
+图形数据库访问工具通常会利用这个原理来实现单独更新某个列的功能。
+
+..
+    For example, 
+    this command updates all products 
+    that have a price of 5 to have a price of 10:
+
+举个例子，
+以下这个语句将从 ``products`` 表格里面找出所有 ``price`` 值为 ``5`` 的行，
+并把它们的 ``price`` 值修改为 ``10`` ：
 
 ::
 
     UPDATE products SET price = 10 WHERE price = 5;
 
-This might cause zero, one, or many rows to be updated. It is not an error to attempt an update that does not match any rows.
+..
+    This might cause zero, one, or many rows to be updated. 
+    It is not an error to attempt an update that does not match any rows.
 
-Let's look at that command in detail. First is the key word ``UPDATE`` followed by the table name. As usual, the table name can be schema-qualified, otherwise it is looked up in the path. Next is the key word ``SET`` followed by the column name, an equal sign, and the new column value. The new column value can be any scalar expression, not just a constant. For example, if you want to raise the price of all products by 10% you could use:
+这个命令可能会造成零个、一个或者很多个行被更新。
+执行一个没有实际效果的更新操作并不会引起错误。
+
+..
+    Let's look at that command in detail. 
+
+    First is the key word ``UPDATE`` followed by the table name. 
+
+    As usual, 
+    the table name can be schema-qualified, 
+    otherwise it is looked up in the path. 
+
+    Next is the key word ``SET`` followed by the column name, 
+    an equal sign, 
+    and the new column value. 
+
+    The new column value can be any scalar expression, 
+    not just a constant. 
+
+    For example, 
+    if you want to raise the price of all products by 10% you could use:
+
+让我们来详细地分析上面的这个命令。
+首先，
+跟在关键字 ``UPDATE`` 之后的是表格的名字。
+As usual, 
+the table name can be schema-qualified, 
+otherwise it is looked up in the path. 
+接着，
+跟着关键字 ``SET`` 之后的是列的名字，
+一个等号，
+以及要设置给列的新值。
+列的新值既可以是任何标量表达式（scalar expression），
+也可以是一个常量。
+比如说，
+如果你想要将所有产品的价格都提高 10% ，
+那么可以执行以下命令：
 
 ::
 
     UPDATE products SET price = price * 1.10;
 
-As you see, the expression for the new value can refer to the existing value(s) in the row. We also left out the ``WHERE`` clause. If it is omitted, it means that all rows in the table are updated. If it is present, only those rows that match the ``WHERE`` condition are updated. Note that the equals sign in the SET clause is an assignment while the one in the ``WHERE`` clause is a comparison, but this does not create any ambiguity. Of course, the ``WHERE`` condition does not have to be an equality test. Many other operators are available (see Chapter 9). But the expression needs to evaluate to a Boolean result.
+..
+    As you see, 
+    the expression for the new value can refer to the existing value(s) in the row. 
 
-You can update more than one column in an UPDATE command by listing more than one assignment in the SET clause. For example:
+    We also left out the ``WHERE`` clause. 
+
+    If it is omitted, 
+    it means that all rows in the table are updated. 
+
+    If it is present, 
+    only those rows that match the ``WHERE`` condition are updated. 
+
+    Note that the equals sign in the ``SET`` clause is an assignment 
+    while the one in the ``WHERE`` clause is a comparison, 
+    but this does not create any ambiguity. 
+
+    Of course, 
+    the ``WHERE`` condition does not have to be an equality test. 
+
+    Many other operators are available (see Chapter 9). 
+
+    But the expression needs to evaluate to a Boolean result.
+
+如你所见，
+一个表达式可以通过引用行里面已有的值去构建新值。
+上面展示的 ``UPDATE`` 命令都没有用到 ``WHERE`` 语句：
+如果用户在执行 ``UPDATE`` 命令时没有给定 ``WHERE`` 语句，
+那么表格中的所有行都将被更新；
+另一方面，
+如果用户给定了 ``WHERE`` 语句，
+那么只有那些符合 ``WHERE`` 语句中指定条件的语句会被更新。
+一个需要注意的地方是，
+当等号出现在 ``SET`` 语句里面时，
+它表示的是一个赋值操作；
+而当等号出现在 ``WHERE`` 语句里面时，
+它表示的是一次对比操作；
+这两种操作是完全不同的两种操作。
+另外需要注意的一点是，
+虽然 ``WHERE`` 语句中的表达式需要计算出一个布尔值结果，
+但这个表达式并不总是为一个相等测试条件：
+除了等号之外，
+PostgreSQL 还提供了很多操作符可供使用，
+具体的信息将在本文档的第 9 章进行介绍。
+
+..
+    You can update more than one column in an UPDATE command 
+    by listing more than one assignment in the SET clause. 
+    For example:
+
+通过在 ``SET`` 语句里面列出多个赋值等式，
+用户可以在一条 ``UPDATE`` 命令里面对多个列进行更新。
+就像这样：
 
 ::
 
