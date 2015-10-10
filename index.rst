@@ -88,3 +88,4 @@ Readers of this part should know how to connect to a PostgreSQL database and iss
 
    sql/ddl
    sql/dml
+   sql/datatype
