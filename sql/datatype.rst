@@ -257,22 +257,43 @@ SQL 标准只指定了 ``integer`` 类型（又称 ``int`` 类型）、 ``smalli
     calculations on numeric values are very slow compared to the integer types, 
     or to the floating-point types described in the next section.
 
+``numeric`` 类型可以储存数字非常多的数值，
+它适合用来储存金额或者其他要求精确性的数量值。
+在有可能的情况下，
+``numeric`` 值之间的计算（比如加法、加法和乘法）将产生一个精确的结果。
+但是，
+与整数类型或者下一节介绍的浮点数类型相比，
+``numeric`` 值的计算速度会慢很多。
 
 ..
     We use the following terms below: 
     The scale of a numeric is the count of decimal digits in the fractional part, 
     to the right of the decimal point. 
     
-    The precision of a numeric is the total count of significant digits in the whole number, 
+    The precision of a numeric 
+    is the total count of significant digits in the whole number, 
     that is, the number of digits to both sides of the decimal point. 
     
     So the number 23.5141 has a precision of 6 and a scale of 4. 
     
     Integers can be considered to have a scale of zero.
 
+本文档接下来将使用以下术语来描述 ``number`` 值：
+一个 ``numeric`` 值的规模（scale）指的是这个值在小数点之后，
+有多少个数字；
+而一个 ``numeric`` 值的精度（precision），
+指的则是这个值总共包含了多少个有符号数字。
+比如说，
+数字 23.5141 的精度为 6 ，
+规模为 4 。
+我们可以将整数的规模看做是 0 。
+
 ..
     Both the maximum precision and the maximum scale of a numeric column can be configured. 
     To declare a column of type numeric use the syntax:
+
+``numeric`` 列的最大精度和最大规模都是可配置的。
+定义一个 ``numeric`` 类型的列可以使用以下语法：
 
 ::
 
@@ -284,10 +305,10 @@ SQL 标准只指定了 ``integer`` 类型（又称 ``int`` 类型）、 ``smalli
     Alternatively:
 
 精度必须是正数，
-而大小则可以是 ``0`` 或者正数。
+而规模则可以是 ``0`` 或者正数。
 此外，
-如果大小为 ``0`` ，
-那么也可以使用以下这种声明：
+如果向定义规模为 ``0`` 的 ``numeric`` 值，
+那么可以使用以下声明：
 
 ::
 
@@ -297,31 +318,81 @@ SQL 标准只指定了 ``integer`` 类型（又称 ``int`` 类型）、 ``smalli
     selects a scale of 0. 
     Specifying:
 
+最后，
+如果我们使用以下这种不带精度和规模的声明去创建一个列：
+
 ::
 
     NUMERIC
 
-without any precision or scale creates a column in which numeric values of any precision and scale can be stored, 
-up to the implementation limit on precision. 
-A column of this kind will not coerce input values to any particular scale, 
-whereas numeric columns with a declared scale will coerce input values to that scale. 
-(The SQL standard requires a default scale of 0, i.e., coercion to integer precision. We find this a bit useless. If you're concerned about portability, always specify the precision and scale explicitly.)
+..
+    without any precision or scale creates a column in which numeric values of any precision and scale can be stored, 
+    up to the implementation limit on precision. 
+    A column of this kind will not coerce input values to any particular scale, 
+    whereas numeric columns with a declared scale will coerce input values to that scale. 
+    (The SQL standard requires a default scale of 0, i.e., coercion to integer precision. We find this a bit useless. If you're concerned about portability, always specify the precision and scale explicitly.)
+
+那么这个列将能够储存任意精度和规模的 ``numeric`` 值，
+它的最大精度和规模只受实现的限制。
+
+不指定精度和规模的 ``numeric`` 列不会将输入值强制转换为任何特定的规模，
+但指定了规模的 ``numeric`` 列则会通过强制转换，
+将输入值转换为指定的规模。
+（SQL 标准要求为 ``0`` 设置一个默认的规模，
+用于将值强制转换为整数精度，
+但是这个规则的作用并不大。
+对移植性有要求的用户可以总是显式地指定精度和规模。）
 
 ..
     Note: The maximum allowed precision when explicitly specified in the type declaration is 1000; NUMERIC without a specified precision is subject to the limits described in Table 8-2.
 
-If the scale of a value to be stored is greater than the declared scale of the column, the system will round the value to the specified number of fractional digits. Then, if the number of digits to the left of the decimal point exceeds the declared precision minus the declared scale, an error is raised.
+..
+    If the scale of a value to be stored 
+    is greater than the declared scale of the column, 
+    the system will round the value to the specified number of fractional digits. 
 
-Numeric values are physically stored without any extra leading or trailing zeroes. Thus, the declared precision and scale of a column are maximums, not fixed allocations. (In this sense the numeric type is more akin to varchar(n) than to char(n).) The actual storage requirement is two bytes for each group of four decimal digits, plus three to eight bytes overhead.
+    Then, 
+    if the number of digits to the left of the decimal point 
+    exceeds the declared precision minus the declared scale, 
+    an error is raised.
 
-In addition to ordinary numeric values, the numeric type allows the special value NaN, meaning "not-a-number". Any operation on NaN yields another NaN. When writing this value as a constant in an SQL command, you must put quotes around it, for example UPDATE table SET x = 'NaN'. On input, the string NaN is recognized in a case-insensitive manner.
+如果输入值的规模比列定义时指定的规模要大，
+那么系统将会把输入值四舍五入至指定的小数位。
+之后，
+如果输入值位于小数点左边的数字数量，
+超过了列的精度减去列的规模得出的差，
+那么系统将抛出一个错误。
+
+..
+    Numeric values are physically stored without any extra leading or trailing zeroes. 
+    Thus, 
+    the declared precision and scale of a column are maximums, 
+    not fixed allocations. 
+    (In this sense the numeric type is more akin to varchar(n) than to char(n).) 
+    The actual storage requirement is two bytes for each group of four decimal digits, 
+    plus three to eight bytes overhead.
+
+..
+    In addition to ordinary numeric values, 
+    the numeric type allows the special value NaN, 
+    meaning "not-a-number". 
+    Any operation on NaN yields another NaN. 
+    When writing this value as a constant in an SQL command, 
+    you must put quotes around it, 
+    for example UPDATE table SET x = 'NaN'. 
+    On input, 
+    the string NaN is recognized in a case-insensitive manner.
 
 ..
     Note: In most implementations of the "not-a-number" concept, NaN is not considered equal to any other numeric value (including NaN). In order to allow numeric values to be sorted and used in tree-based indexes, PostgreSQL treats NaN values as equal, and greater than all non-NaN values.
 
-The types decimal and numeric are equivalent. Both types are part of the SQL standard.
+..
+    The types decimal and numeric are equivalent. Both types are part of the SQL standard.
 
-When rounding values, the numeric type rounds ties away from zero, while (on most machines) the real and double precision types round ties to the nearest even number. For example:
+..
+    When rounding values, 
+    the numeric type rounds ties away from zero, 
+    while (on most machines) the real and double precision types round ties to the nearest even number. For example:
 
 ::
 
