@@ -99,9 +99,45 @@
 外键（foreign key）
 ------------------------
 
-Recall the weather and cities tables from Chapter 2. Consider the following problem: You want to make sure that no one can insert rows in the weather table that do not have a matching entry in the cities table. This is called maintaining the referential integrity of your data. In simplistic database systems this would be implemented (if at all) by first looking at the cities table to check if a matching record exists, and then inserting or rejecting the new weather records. This approach has a number of problems and is very inconvenient, so PostgreSQL can do this for you.
+..
+    Recall the weather and cities tables from Chapter 2. 
+    
+    Consider the following problem: 
+    You want to make sure that no one can insert rows in the weather table 
+    that do not have a matching entry in the cities table. 
+    
+    This is called maintaining the referential integrity of your data. 
+    
+    In simplistic database systems 
+    this would be implemented (if at all) 
+    by first looking at the cities table 
+    to check if a matching record exists, 
+    and then inserting or rejecting the new weather records. 
+    
+    This approach has a number of problems and is very inconvenient, 
+    so PostgreSQL can do this for you.
 
-The new declaration of the tables would look like this:
+回忆一下本文档第 2 章介绍过的 ``weather`` 表格和 ``cities`` 表格。
+假设我们现在想要保证，
+在将一个新行插入到 ``weather`` 表格的时候，
+这个新行中提到的城市必须已经存在于 ``cities`` 表格，
+这种机制通常被称为“数据的引用完整性管理机制”。
+在一个非常简单的数据库系统中，
+引用完整性可以通过以下方法来确保：
+在尝试向 ``weather`` 表格插入新记录之前，
+先在 ``cities`` 表格里面进行查找，
+检查是否存在匹配的城市记录，
+然后再决定是否将新的记录插入到 ``weather`` 表格里面。
+这种简单的实现方法有非常多的问题，
+并且这种方法也无法满足数据的一致性要求，
+因此 PostgreSQL 选择了提供内置的引用完整性管理机制，
+这种机制就是外键。
+
+..
+    The new declaration of the tables would look like this:
+
+在定义了外键之后，
+表格的新定义如下：
 
 ::
 
@@ -118,7 +154,11 @@ The new declaration of the tables would look like this:
             date      date
     );
 
-Now try inserting an invalid record:
+..
+    Now try inserting an invalid record:
+
+现在，
+尝试插入一条不合法的记录将引发一个错误：
 
 ::
 
@@ -129,4 +169,19 @@ Now try inserting an invalid record:
     ERROR:  insert or update on table "weather" violates foreign key constraint "weather_city_fkey"
     DETAIL:  Key (city)=(Berkeley) is not present in table "cities".
 
-The behavior of foreign keys can be finely tuned to your application. We will not go beyond this simple example in this tutorial, but just refer you to Chapter 5 for more information. Making correct use of foreign keys will definitely improve the quality of your database applications, so you are strongly encouraged to learn about them.
+..
+    The behavior of foreign keys can be finely tuned to your application. 
+    
+    We will not go beyond this simple example in this tutorial, 
+    but just refer you to Chapter 5 for more information. 
+
+    Making correct use of foreign keys 
+    will definitely improve the quality of your database applications, 
+    so you are strongly encouraged to learn about them.
+
+外键的行为可以很好地集成到应用程序里面。
+除了这个简单的示例以外，
+这个教程并不会介绍更多关于外键的信息，
+但这些信息可以在本文档的第 5 章找到。
+正确地使用外键可以有效地提升数据库程序的质量，
+因此读者应该仔细地学习与外键有关的知识。
