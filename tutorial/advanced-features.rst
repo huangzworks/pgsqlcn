@@ -41,3 +41,55 @@
 读者可以通过载入这个文件来直接使用这些数据，
 因此本章将不再展示输入这些数据的过程。
 （文件的载入方法可以在本文档的 2.1 节看到。）
+
+
+视图（view）
+--------------------
+
+..
+    Refer back to the queries in Section 2.6. 
+
+    Suppose the combined listing of weather records and city location is of particular interest to your application, 
+    but you do not want to type the query each time you need it. 
+
+    You can create a *view* over the query, 
+    which gives a name to the query 
+    that you can refer to like an ordinary table:
+
+让我们重新回顾本文档 2.6 节提到过的例子。
+假设对于程序来说，
+同时列出天气记录以及相关联的地理位置是一个特别重要的操作，
+但你可能并不想在每次用到这个操作的时候都重新输入整个查询语句，
+这时你就可以为那个查询创建一个\ *视图*\ 。
+视图允许用户为一个查询关联一个名字，
+并通过给定名字来引用与之相关联的查询，
+就像这样：
+
+::
+
+    CREATE VIEW myview AS
+        SELECT city, temp_lo, temp_hi, prcp, date, location
+            FROM weather, cities
+            WHERE city = name;
+
+    SELECT * FROM myview;
+
+..
+    Making liberal use of views 
+    is a key aspect of good SQL database design. 
+
+    Views allow you to encapsulate the details of the structure of your tables, 
+    which might change as your application evolves, 
+    behind consistent interfaces.
+
+大量使用视图是优秀的 SQL 数据库设计的关键部分。
+视图允许用户将表格结构的相关细节隐藏起来，
+使得应用程序即使在不断演进而导致表格结构不断变更的情况下，
+仍然能够提供始终如一的接口。
+
+..
+    Views can be used in almost any place a real table can be used. 
+    Building views upon other views is not uncommon.
+
+视图几乎可以用在所有真实表格可以使用的地方。
+基于其他视图去构建新视图的做法并不少见。
