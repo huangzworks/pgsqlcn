@@ -91,5 +91,42 @@
     Views can be used in almost any place a real table can be used. 
     Building views upon other views is not uncommon.
 
-视图几乎可以用在所有真实表格可以使用的地方。
+几乎所有可以使用表格地方，
+都可以使用视图去代替表格。
 基于其他视图去构建新视图的做法并不少见。
+
+
+外键（foreign key）
+------------------------
+
+Recall the weather and cities tables from Chapter 2. Consider the following problem: You want to make sure that no one can insert rows in the weather table that do not have a matching entry in the cities table. This is called maintaining the referential integrity of your data. In simplistic database systems this would be implemented (if at all) by first looking at the cities table to check if a matching record exists, and then inserting or rejecting the new weather records. This approach has a number of problems and is very inconvenient, so PostgreSQL can do this for you.
+
+The new declaration of the tables would look like this:
+
+::
+
+    CREATE TABLE cities (
+            city     varchar(80) primary key,
+            location point
+    );
+
+    CREATE TABLE weather (
+            city      varchar(80) references cities(city),
+            temp_lo   int,
+            temp_hi   int,
+            prcp      real,
+            date      date
+    );
+
+Now try inserting an invalid record:
+
+::
+
+    INSERT INTO weather VALUES ('Berkeley', 45, 53, 0.0, '1994-11-28');
+
+::
+
+    ERROR:  insert or update on table "weather" violates foreign key constraint "weather_city_fkey"
+    DETAIL:  Key (city)=(Berkeley) is not present in table "cities".
+
+The behavior of foreign keys can be finely tuned to your application. We will not go beyond this simple example in this tutorial, but just refer you to Chapter 5 for more information. Making correct use of foreign keys will definitely improve the quality of your database applications, so you are strongly encouraged to learn about them.
