@@ -501,19 +501,169 @@ PostgreSQL 实际上会把每条被执行的 SQL 语句当做是一个事务。
 窗口函数
 ------------
 
+A *window function* performs a calculation across a set of table rows that are somehow related to the current row. This is comparable to the type of calculation that can be done with an aggregate function. But unlike regular aggregate functions, use of a window function does not cause rows to become grouped into a single output row — the rows retain their separate identities. Behind the scenes, the window function is able to access more than just the current row of the query result.
+
+Here is an example that shows how to compare each employee's salary with the average salary in his or her department:
+
+::
+
+    SELECT depname, empno, salary, avg(salary) OVER (PARTITION BY depname) FROM empsalary;
+
+::
+
+      depname  | empno | salary |          avg          
+    -----------+-------+--------+-----------------------
+     develop   |    11 |   5200 | 5020.0000000000000000
+     develop   |     7 |   4200 | 5020.0000000000000000
+     develop   |     9 |   4500 | 5020.0000000000000000
+     develop   |     8 |   6000 | 5020.0000000000000000
+     develop   |    10 |   5200 | 5020.0000000000000000
+     personnel |     5 |   3500 | 3700.0000000000000000
+     personnel |     2 |   3900 | 3700.0000000000000000
+     sales     |     3 |   4800 | 4866.6666666666666667
+     sales     |     1 |   5000 | 4866.6666666666666667
+     sales     |     4 |   4800 | 4866.6666666666666667
+    (10 rows)
+
+The first three output columns come directly from the table ``empsalary`` , and there is one output row for each row in the table. The fourth column represents an average taken across all the table rows that have the same ``depname`` value as the current row. (This actually is the same function as the regular avg aggregate function, but the ``OVER`` clause causes it to be treated as a window function and computed across an appropriate set of rows.)
+
+A window function call always contains an ``OVER`` clause directly following the window function's name and argument(s). This is what syntactically distinguishes it from a regular function or aggregate function. The ``OVER`` clause determines exactly how the rows of the query are split up for processing by the window function. The ``PARTITION BY`` list within ``OVER`` specifies dividing the rows into groups, or partitions, that share the same values of the ``PARTITION BY`` expression(s). For each row, the window function is computed across the rows that fall into the same partition as the current row.
+
+You can also control the order in which rows are processed by window functions using ``ORDER BY`` within ``OVER`` . (The window ``ORDER BY`` does not even have to match the order in which the rows are output.) Here is an example:
+
+::
+
+    SELECT depname, empno, salary,
+           rank() OVER (PARTITION BY depname ORDER BY salary DESC)
+    FROM empsalary;
+
+::
+
+      depname  | empno | salary | rank 
+    -----------+-------+--------+------
+     develop   |     8 |   6000 |    1
+     develop   |    10 |   5200 |    2
+     develop   |    11 |   5200 |    2
+     develop   |     9 |   4500 |    4
+     develop   |     7 |   4200 |    5
+     personnel |     2 |   3900 |    1
+     personnel |     5 |   3500 |    2
+     sales     |     1 |   5000 |    1
+     sales     |     4 |   4800 |    2
+     sales     |     3 |   4800 |    2
+    (10 rows)
+
+As shown here, the ``rank`` function produces a numerical rank within the current row's partition for each distinct ``ORDER BY`` value, in the order defined by the ``ORDER BY`` clause. ``rank`` needs no explicit parameter, because its behavior is entirely determined by the ``OVER`` clause.
+
+The rows considered by a window function are those of the "virtual table" produced by the query's ``FROM`` clause as filtered by its ``WHERE`` , ``GROUP BY`` , and ``HAVING`` clauses if any. For example, a row removed because it does not meet the ``WHERE`` condition is not seen by any window function. A query can contain multiple window functions that slice up the data in different ways by means of different ``OVER`` clauses, but they all act on the same collection of rows defined by this virtual table.
+
+We already saw that ORDER BY can be omitted if the ordering of rows is not important. It is also possible to omit ``PARTITION BY`` , in which case there is just one partition containing all the rows.
+
+There is another important concept associated with window functions: for each row, there is a set of rows within its partition called its *window frame* . Many (but not all) window functions act only on the rows of the window frame, rather than of the whole partition. By default, if ``ORDER BY`` is supplied then the frame consists of all rows from the start of the partition up through the current row, plus any following rows that are equal to the current row according to the ``ORDER BY`` clause. When ``ORDER BY`` is omitted the default frame consists of all rows in the partition. [#f1]_ Here is an example using ``sum`` :
+
+::
+
+    SELECT salary, sum(salary) OVER () FROM empsalary;
+
+::
+
+     salary |  sum  
+    --------+-------
+       5200 | 47100
+       5000 | 47100
+       3500 | 47100
+       4800 | 47100
+       3900 | 47100
+       4200 | 47100
+       4500 | 47100
+       4800 | 47100
+       6000 | 47100
+       5200 | 47100
+    (10 rows)
+
+Above, since there is no ``ORDER BY`` in the ``OVER`` clause, the window frame is the same as the partition, which for lack of ``PARTITION BY`` is the whole table; in other words each sum is taken over the whole table and so we get the same result for each output row. But if we add an ``ORDER BY`` clause, we get very different results:
+
+::
+
+    SELECT salary, sum(salary) OVER (ORDER BY salary) FROM empsalary;
+
+::
+
+     salary |  sum  
+    --------+-------
+       3500 |  3500
+       3900 |  7400
+       4200 | 11600
+       4500 | 16100
+       4800 | 25700
+       4800 | 25700
+       5000 | 30700
+       5200 | 41100
+       5200 | 41100
+       6000 | 47100
+    (10 rows)
+
+Here the sum is taken from the first (lowest) salary up through the current one, including any duplicates of the current one (notice the results for the duplicated salaries).
+
+Window functions are permitted only in the ``SELECT`` list and the ``ORDER BY`` clause of the query. They are forbidden elsewhere, such as in ``GROUP BY`` , ``HAVING`` and ``WHERE`` clauses. This is because they logically execute after the processing of those clauses. Also, window functions execute after regular aggregate functions. This means it is valid to include an aggregate function call in the arguments of a window function, but not vice versa.
+
+If there is a need to filter or group rows after the window calculations are performed, you can use a sub-select. For example:
+
+::
+
+    SELECT depname, empno, salary, enroll_date
+    FROM
+      (SELECT depname, empno, salary, enroll_date,
+              rank() OVER (PARTITION BY depname ORDER BY salary DESC, empno) AS pos
+         FROM empsalary
+      ) AS ss
+    WHERE pos < 3;
+
+The above query only shows the rows from the inner query having ``rank`` less than 3.
+
+When a query involves multiple window functions, it is possible to write out each one with a separate ``OVER`` clause, but this is duplicative and error-prone if the same windowing behavior is wanted for several functions. Instead, each windowing behavior can be named in a ``WINDOW`` clause and then referenced in ``OVER`` . For example:
+
+::
+
+    SELECT sum(salary) OVER w, avg(salary) OVER w
+      FROM empsalary
+      WINDOW w AS (PARTITION BY depname ORDER BY salary DESC);
+
+More details about window functions can be found in `Section 4.2.8 <http://www.postgresql.org/docs/devel/static/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS>`_\ , `Section 9.21 <http://www.postgresql.org/docs/devel/static/functions-window.html>`_\ , `Section 7.2.5 <http://www.postgresql.org/docs/devel/static/queries-table-expressions.html#QUERIES-WINDOW>`_\ , and the `SELECT <http://www.postgresql.org/docs/devel/static/sql-select.html>`_ reference page.
+
+.. [#f1] There are options to define the window frame in other ways, but this tutorial does not cover them. See `Section 4.2.8 <http://www.postgresql.org/docs/devel/static/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS>`_ for details.
+
+
 继承
 ------------
 
-Inheritance is a concept from object-oriented databases. 
-It opens up interesting new possibilities of database design.
+..
+    Inheritance is a concept from object-oriented databases. 
+    It opens up interesting new possibilities of database design.
 
-Let's create two tables: 
-A table ``cities`` and a table ``capitals`` . 
-Naturally, 
-capitals are also cities, 
-so you want some way to show the capitals implicitly when you list all cities. 
-If you're really clever 
-you might invent some scheme like this:
+继承（inheritance）是一个来自于面向对象数据库的概念，
+它为数据库设计带来了新的可能性。
+
+..
+    Let's create two tables: 
+    A table ``cities`` and a table ``capitals`` . 
+
+    Naturally, 
+    capitals are also cities, 
+    so you want some way to show the capitals implicitly 
+    when you list all cities. 
+
+    If you're really clever 
+    you might invent some scheme like this:
+
+假设我们现在要创建两个表格，
+一个表格储存城市的相关信息，
+而另一个表格则储存首都的相关信息。
+因为首都也属于城市，
+所以你可能会想要在展示所有城市的时候，
+将首都也一并展示出来。
+为此，
+你可能会写出以下代码：
 
 ::
 
@@ -535,9 +685,19 @@ you might invent some scheme like this:
         UNION
       SELECT name, population, altitude FROM non_capitals;
 
-This works OK as far as querying goes, but it gets ugly when you need to update several rows, for one thing.
+..
+    This works OK as far as querying goes, 
+    but it gets ugly when you need to update several rows, 
+    for one thing.
 
-A better solution is this:
+这种做法虽然可以实现我们想要的查询效果，
+但是当我们因为某个原因需要对表格中的某些行进行更新的时候，
+这种做法就会显得异常丑陋。
+
+..
+    A better solution is this:
+
+以下是一个更好的解决方法：
 
 ::
 
@@ -551,9 +711,40 @@ A better solution is this:
       state      char(2)
     ) INHERITS (cities);
 
-In this case, a row of capitals inherits all columns (name, population, and altitude) from its parent, cities. The type of the column name is text, a native PostgreSQL type for variable length character strings. State capitals have an extra column, state, that shows their state. In PostgreSQL, a table can inherit from zero or more other tables.
+..
+    In this case, 
+    a row of capitals inherits all columns (name, population, and altitude) from its parent, 
+    cities. 
 
-For example, the following query finds the names of all cities, including state capitals, that are located at an altitude over 500 feet:
+    The type of the column name is text, 
+    a native PostgreSQL type for variable length character strings. 
+
+    State capitals have an extra column, state, that shows their state. 
+
+    In PostgreSQL, 
+    a table can inherit from zero or more other tables.
+
+在这个示例中，
+一个 ``capitals`` 表格的行将从它的父表格（parent） ``cities`` 表格那里继承它的所有列（\ ``name`` 、 ``population`` 和 ``altitude``\ ）。
+其中，
+``name`` 列的类型为 ``text`` ，
+这是 PostgreSQL 内置的一种类型，
+用于储存长度可变的文字字符串。
+与 ``cities`` 表格相比，
+``capitals`` 表格拥有额外的 ``state`` 列，
+这个列用于储存首都所属的国家。
+在 PostgreSQL 中，
+一个表格可以继承自任意多个其他表格。
+
+..
+    For example, 
+    the following query finds the names of all cities, 
+    including state capitals, 
+    that are located at an altitude over 500 feet:
+
+作为例子，
+下面这个查询可以找出海拔超过 500 英尺的城市和首都，
+并返回它们的名字和海拔：
 
 ::
 
@@ -561,7 +752,10 @@ For example, the following query finds the names of all cities, including state 
       FROM cities
         WHERE altitude > 500;
 
-which returns:
+..
+    which returns:
+
+以下是这个查询的执行结果：
 
 ::
 
@@ -572,7 +766,14 @@ which returns:
      Madison   |      845
     (3 rows)
 
-On the other hand, the following query finds all the cities that are not state capitals and are situated at an altitude over 500 feet:
+..
+    On the other hand, 
+    the following query finds all the cities that are not state capitals 
+    and are situated at an altitude over 500 feet:
+
+另一方面，
+以下这个查询可以找出那些不是首都，
+但海拔都超过 500 英尺的城市：
 
 ::
 
@@ -588,11 +789,25 @@ On the other hand, the following query finds all the cities that are not state c
      Mariposa  |     1953
     (2 rows)
 
-Here the ONLY before cities indicates that the query should be run over only the cities table, and not tables below cities in the inheritance hierarchy. Many of the commands that we have already discussed — SELECT, UPDATE, and DELETE — support this ONLY notation.
+..
+    Here the ``ONLY`` before cities indicates that 
+    the query should be run over only the ``cities`` table, 
+    and not tables below ``cities`` in the inheritance hierarchy. 
+    
+    Many of the commands that we have already discussed — 
+    SELECT, UPDATE, and DELETE — support this ONLY notation.
 
-.. note::
+位于 ``cities`` 前面的 ``ONLY`` 表示查询只需要对 ``cities`` 表格进行查询，
+至于那些在继承层次里面低于 ``cities`` 表格的其他表格，
+则不需要进行查询。
+这个教程里面介绍过的很多命令，
+比如 ``SELECT`` 、 ``UPDATE`` 和 ``DELETE`` ，
+都支持这个 ``ONLY`` 选项。
 
-    Although inheritance is frequently useful, it has not been integrated with unique constraints or foreign keys, which limits its usefulness. See Section 5.9 for more detail.
+..
+    .. note::
+
+        Although inheritance is frequently useful, it has not been integrated with unique constraints or foreign keys, which limits its usefulness. See Section 5.9 for more detail.
 
 
 结语
