@@ -190,6 +190,314 @@
 事务
 ------------
 
+..
+    *Transactions* are a fundamental concept of all database systems. 
+
+    The essential point of a transaction is that 
+    it bundles multiple steps into a single, 
+    all-or-nothing operation. 
+
+    The intermediate states between the steps 
+    are not visible to other concurrent transactions, 
+    and if some failure occurs that prevents the transaction from completing, 
+    then none of the steps affect the database at all.
+
+*事务*\ 是所有数据库系统的一个基本概念。
+事务本质上就是将多个步骤绑定为一个操作，
+这个操作要么就执行所有被绑定的步骤，
+要么就一个步骤都不执行。
+各个步骤之间的中间状态对于其他并发事务是不可见的，
+如果事务中的某个步骤在执行时出现了错误，
+导致事务无法完成，
+那么所有步骤的效果都会被撤销。
+
+..
+    For example, 
+    consider a bank database that contains balances for various customer accounts, 
+    as well as total deposit balances for branches. 
+    Suppose that we want to record a payment of $100.00 from Alice's account to Bob's account. 
+    Simplifying outrageously, the SQL commands for this might look like:
+
+举个例子，
+假设一个银行数据库保存着各个客户账号的余额，
+并为每个分行都设置了一个总存款余额。
+如果我们想要将爱丽丝账号上的 $100.00 转移到鲍勃的账号，
+那么一个简陋的程序可能会执行以下 SQL 命令：
+
+::
+
+    UPDATE accounts SET balance = balance - 100.00
+        WHERE name = 'Alice';
+
+    UPDATE branches SET balance = balance - 100.00
+        WHERE name = (SELECT branch_name FROM accounts WHERE name = 'Alice');
+
+    UPDATE accounts SET balance = balance + 100.00
+        WHERE name = 'Bob';
+
+    UPDATE branches SET balance = balance + 100.00
+        WHERE name = (SELECT branch_name FROM accounts WHERE name = 'Bob');
+
+..
+    The details of these commands are not important here; 
+    the important point is that 
+    there are several separate updates 
+    involved to accomplish this rather simple operation. 
+    Our bank's officers will want to be assured that either all these updates happen, 
+    or none of them happen. 
+    
+    It would certainly not do for a system failure 
+    to result in Bob receiving $100.00 that was not debited from Alice. 
+    
+    Nor would Alice long remain a happy customer 
+    if she was debited without Bob being credited. 
+        
+    We need a guarantee that 
+    if something goes wrong partway through the operation, 
+    none of the steps executed so far will take effect. 
+    
+    Grouping the updates into a transaction gives us this guarantee. 
+    A transaction is said to be *atomic* : 
+    from the point of view of other transactions, 
+    it either happens completely or not at all.
+
+这些命令的细节并不重要，
+重要的是，
+要完成这个简单的转账操作，
+程序需要进行好几个独立的更新。
+银行的程序员需要保证这些更新要么全都都发生，
+要么就一个都不发生。
+即使系统出现故障，
+也绝不能发生鲍勃收到了 $100.00 ，
+但是爱丽丝的转账并没有成功的事情；
+也不能发生爱丽丝已经转账了，
+但是鲍勃没有收到钱的事情。
+系统必须保证，
+如果在操作执行的过程中，
+有某个地方出错了，
+那么已执行的所有步骤的效果都会被撤销。
+通过将多个更新打包为一个事务可以获得以上所需的保证：
+事务的\ *原子性*\ 可以保证事务包含的所有操作要么全部都执行，
+要么就一个都不执行。
+
+..
+    We also want a guarantee that 
+    once a transaction is completed and acknowledged by the database system, 
+    it has indeed been permanently recorded 
+    and won't be lost even if a crash ensues shortly thereafter. 
+    
+    For example, 
+    if we are recording a cash withdrawal by Bob, 
+    we do not want any chance that the debit to his account will disappear in a crash 
+    just after he walks out the bank door. 
+
+    A transactional database guarantees that 
+    all the updates made by a transaction are logged in permanent storage (i.e., on disk) 
+    before the transaction is reported complete.
+
+我们还想要保证，
+一旦事务完成并且得到了数据库系统的确认，
+它将成为永久性的记录，
+即使系统在事务完成之后崩溃，
+事务的效果也不会丢失。
+举个例子，
+如果鲍勃刚刚在银行完成了一次提款操作，
+那么我们希望，
+即使系统在执行完提款操作之后崩溃，
+鲍勃的提款记录也不会丢失。
+支持事务功能的数据库可以保证，
+数据库在报告一个事务执行完毕之前，
+会先将那个事务执行的所有更新都记录到永久性存储器（比如硬盘）上面。
+
+..
+    Another important property of transactional databases 
+    is closely related to the notion of atomic updates: 
+    when multiple transactions are running concurrently, 
+    each one should not be able to see the incomplete changes made by others. 
+
+    For example, 
+    if one transaction is busy totalling all the branch balances, 
+    it would not do for it to include the debit from Alice's branch but not the credit to Bob's branch, 
+    nor vice versa. 
+    
+    So transactions must be all-or-nothing 
+    not only in terms of their permanent effect on the database, 
+    but also in terms of their visibility as they happen. 
+    
+    The updates made so far by an open transaction are invisible to other transactions 
+    until the transaction completes, 
+    whereupon all the updates become visible simultaneously.
+
+事务的另一个非常重要的属性和原子更新的概念密切相关：
+当多个事务并发运行时，
+每个事务都不应该看见其他事务正在进行的、尚不完整的修改。
+
+举个例子，
+如果一个事务正在计算所有分行的余额总和，
+它会将爱丽丝所在分行进行的扣帐操作和鲍勃所在分行的入账操作都考虑在内，
+而不会说只考虑了爱丽丝所在分行的扣帐操作，
+但并没有考虑鲍勃所在分行的入账操作；
+反之亦然。
+
+因此事务不仅要在事务效果的持久性方面做到“要么全部执行，要么全部都不执行”，
+它在事务效果的可见性方面也要做到这一点。
+
+直到一个事务执行完毕为止，
+这个事务进行的所有更新对于其他事务都是不可见的，
+而当事务完成的时候，
+事务进行的所有更新都会同时变为可见。
+
+..
+    In PostgreSQL, 
+    a transaction is set up by surrounding the SQL commands of the transaction with ``BEGIN`` and ``COMMIT`` commands. 
+    So our banking transaction would actually look like:
+
+在 PostgreSQL 里面，
+用户可以通过使用 ``BEGIN`` 和 ``COMMIT`` 这两个命令，
+将那些需要在事务里面执行的事务包围起来，
+从而创建一个事务。
+上面例子中的银行转账操作可以用以下事务来实现：
+
+::
+
+    BEGIN;
+    UPDATE accounts SET balance = balance - 100.00
+        WHERE name = 'Alice';
+    -- etc etc
+    COMMIT;
+
+..
+    If, partway through the transaction, 
+    we decide we do not want to commit (perhaps we just noticed that Alice's balance went negative), 
+    we can issue the command ``ROLLBACK`` instead of ``COMMIT`` , 
+    and all our updates so far will be canceled.
+
+如果在创建事务的过程中，
+我们临时决定放弃这个事务，
+那么可以使用 ``ROLLBACK`` 命令去代替 ``COMMIT`` ，
+从而撤销未执行的事务。
+
+..
+    PostgreSQL actually treats every SQL statement as being executed within a transaction. 
+    If you do not issue a ``BEGIN`` command, 
+    then each individual statement has an implicit ``BEGIN`` and (if successful) COMMIT wrapped around it. 
+    A group of statements surrounded by ``BEGIN`` and ``COMMIT`` is sometimes called a transaction block.
+
+PostgreSQL 实际上会把每条被执行的 SQL 语句当做是一个事务。
+如果用户没有显式地执行 ``BEGIN`` 命令，
+那么 PostgreSQL 将为每条单独的命令隐式地加上一个 ``BEGIN`` ，
+并在 SQL 命令入队成功之后，
+再追加一条 ``COMMIT`` 命令，
+将被执行的 SQL 命令包围起来。
+
+..
+    .. note::
+
+        Some client libraries issue ``BEGIN`` and ``COMMIT`` commands automatically, 
+        so that you might get the effect of transaction blocks without asking. 
+        Check the documentation for the interface you are using.
+
+..
+    It's possible to control the statements in a transaction in a more granular fashion 
+    through the use of *savepoints* . 
+
+    Savepoints allow you to selectively discard parts of the transaction, 
+    while committing the rest. 
+
+    After defining a savepoint with ``SAVEPOINT`` , 
+    you can if needed roll back to the savepoint with ``ROLLBACK`` TO. 
+    All the transaction's database changes between defining the savepoint and rolling back to it are discarded, 
+    but changes earlier than the savepoint are kept.
+
+通过使用\ *保存点*\ ，
+用户可以以一种更为粒状（granular fashion）的方式去控制事务中的语句。
+保存点允许用户在提交事务的过程中，
+选择性地放弃事务中的特定部分。
+在使用 ``SAVEPOINT`` 命令定义一个保存点之后，
+用户可以在有需要的时候，
+通过 ``ROLLBACK`` 命令回滚至那个保存点。
+当保存点被回滚时，
+位于保存点之内的所有数据库修改都会被撤销，
+但定义保存点之前所做的那些修改则会继续存在。
+
+..
+    After rolling back to a savepoint, 
+    it continues to be defined, 
+    so you can roll back to it several times. 
+    Conversely, 
+    if you are sure you won't need to roll back to a particular savepoint again, it can be released, 
+    so the system can free some resources. 
+    Keep in mind that either releasing or rolling back to a savepoint 
+    will automatically release all savepoints that were defined after it.
+
+在回滚至一个保存点之后，
+那个保存点还会继续存在，
+以便用户在有需要的时候再次进行回滚。
+与此相反，
+如果用户确定他们不再需要某个保存点，
+那么他们也可以释放那个保存点，
+使得系统可以回收某些与保存点相关的资源。
+需要注意的一点是，
+当一个保存点被释放/回滚时，
+在那个保存点之后定义的所有保存点也会自动被释放/回滚。
+
+..
+    All this is happening within the transaction block, 
+    so none of it is visible to other database sessions. 
+    When and if you commit the transaction block, 
+    the committed actions become visible as a unit to other sessions, 
+    while the rolled-back actions never become visible at all.
+
+因为所有这些动作都发生在事务块（transaction block）内部，
+所以这些动作对于其他数据库会话来说将是不可见的。
+当用户提交事务块之后，
+已提交的动作将作为一个整体（unit）变得对外部会话可见；
+至于那些被回滚了的操作，
+它们对于外部会话来说永远都是不可见的。
+
+..
+    Remembering the bank database, 
+    suppose we debit $100.00 from Alice's account, 
+    and credit Bob's account, 
+    only to find later that we should have credited Wally's account. 
+    We could do it using savepoints like this:
+
+回到之前银行数据库的例子。
+假设程序原本打算从爱丽丝的账户里面扣除 $100.00 ，
+并将这些钱转账到鲍勃的账户里面，
+但之后却发现原来应该转账到沃利的账号里面才对。
+如果程序使用了 PostgreSQL 的保存点特性，
+那么它可能会执行以下命令：
+
+::
+
+    BEGIN;
+    UPDATE accounts SET balance = balance - 100.00
+        WHERE name = 'Alice';
+    SAVEPOINT my_savepoint;
+    UPDATE accounts SET balance = balance + 100.00
+        WHERE name = 'Bob';
+    -- oops ... forget that and use Wally's account
+    ROLLBACK TO my_savepoint;
+    UPDATE accounts SET balance = balance + 100.00
+        WHERE name = 'Wally';
+    COMMIT;
+
+..
+    This example is, of course, oversimplified, 
+    but there's a lot of control possible in a transaction block through the use of savepoints. 
+    Moreover, 
+    ``ROLLBACK`` TO is the only way to regain control of a transaction block 
+    that was put in aborted state by the system due to an error, 
+    short of rolling it back completely and starting again.
+
+这个示例虽然非常简单，
+但它有效地向我们展示了如何通过保存点去对事务块进行控制。
+此外，
+当事务块因为错误而被系统标识为终止状态（aborted state）时，
+重新取得事务块控制权的唯一手段就是使用 ``ROLLBACK`` 。
+
+
 窗口函数
 ------------
 
