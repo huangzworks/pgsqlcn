@@ -501,9 +501,18 @@ PostgreSQL 实际上会把每条被执行的 SQL 语句当做是一个事务。
 窗口函数
 ------------
 
-A *window function* performs a calculation across a set of table rows that are somehow related to the current row. This is comparable to the type of calculation that can be done with an aggregate function. But unlike regular aggregate functions, use of a window function does not cause rows to become grouped into a single output row — the rows retain their separate identities. Behind the scenes, the window function is able to access more than just the current row of the query result.
+A *window function* performs a calculation across a set of table rows 
+that are somehow related to the current row. 
+This is comparable to the type of calculation 
+that can be done with an aggregate function. 
+But unlike regular aggregate functions, 
+use of a window function does not cause rows to become grouped into a single output row 
+— the rows retain their separate identities. 
+Behind the scenes, 
+the window function is able to access more than just the current row of the query result.
 
-Here is an example that shows how to compare each employee's salary with the average salary in his or her department:
+Here is an example that shows how to compare each employee's salary 
+with the average salary in his or her department:
 
 ::
 
@@ -525,11 +534,24 @@ Here is an example that shows how to compare each employee's salary with the ave
      sales     |     4 |   4800 | 4866.6666666666666667
     (10 rows)
 
-The first three output columns come directly from the table ``empsalary`` , and there is one output row for each row in the table. The fourth column represents an average taken across all the table rows that have the same ``depname`` value as the current row. (This actually is the same function as the regular avg aggregate function, but the ``OVER`` clause causes it to be treated as a window function and computed across an appropriate set of rows.)
+The first three output columns come directly from the table ``empsalary`` , 
+and there is one output row for each row in the table. 
+The fourth column represents an average taken across all the table rows that have the same ``depname`` value as the current row. 
+(This actually is the same function as the regular avg aggregate function, 
+but the ``OVER`` clause causes it to be treated as a window function 
+and computed across an appropriate set of rows.)
 
-A window function call always contains an ``OVER`` clause directly following the window function's name and argument(s). This is what syntactically distinguishes it from a regular function or aggregate function. The ``OVER`` clause determines exactly how the rows of the query are split up for processing by the window function. The ``PARTITION BY`` list within ``OVER`` specifies dividing the rows into groups, or partitions, that share the same values of the ``PARTITION BY`` expression(s). For each row, the window function is computed across the rows that fall into the same partition as the current row.
+A window function call always contains an ``OVER`` clause directly following the window function's name and argument(s). 
+This is what syntactically distinguishes it from a regular function or aggregate function. 
+The ``OVER`` clause determines exactly how the rows of the query are split up for processing by the window function. 
+The ``PARTITION BY`` list within ``OVER`` specifies dividing the rows into groups, or partitions, 
+that share the same values of the ``PARTITION BY`` expression(s). 
+For each row, 
+the window function is computed across the rows that fall into the same partition as the current row.
 
-You can also control the order in which rows are processed by window functions using ``ORDER BY`` within ``OVER`` . (The window ``ORDER BY`` does not even have to match the order in which the rows are output.) Here is an example:
+You can also control the order in which rows are processed by window functions using ``ORDER BY`` within ``OVER`` . 
+(The window ``ORDER BY`` does not even have to match the order in which the rows are output.) 
+Here is an example:
 
 ::
 
@@ -553,13 +575,30 @@ You can also control the order in which rows are processed by window functions u
      sales     |     3 |   4800 |    2
     (10 rows)
 
-As shown here, the ``rank`` function produces a numerical rank within the current row's partition for each distinct ``ORDER BY`` value, in the order defined by the ``ORDER BY`` clause. ``rank`` needs no explicit parameter, because its behavior is entirely determined by the ``OVER`` clause.
+As shown here, 
+the ``rank`` function produces a numerical rank within the current row's partition for each distinct ``ORDER BY`` value, 
+in the order defined by the ``ORDER BY`` clause. 
+``rank`` needs no explicit parameter, 
+because its behavior is entirely determined by the ``OVER`` clause.
 
-The rows considered by a window function are those of the "virtual table" produced by the query's ``FROM`` clause as filtered by its ``WHERE`` , ``GROUP BY`` , and ``HAVING`` clauses if any. For example, a row removed because it does not meet the ``WHERE`` condition is not seen by any window function. A query can contain multiple window functions that slice up the data in different ways by means of different ``OVER`` clauses, but they all act on the same collection of rows defined by this virtual table.
+The rows considered by a window function are those of the "virtual table" produced by the query's ``FROM`` clause as filtered by its ``WHERE`` , ``GROUP BY`` , and ``HAVING`` clauses if any. 
+For example, 
+a row removed because it does not meet the ``WHERE`` condition is not seen by any window function. 
+A query can contain multiple window functions that slice up the data in different ways by means of different ``OVER`` clauses, 
+but they all act on the same collection of rows defined by this virtual table.
 
-We already saw that ORDER BY can be omitted if the ordering of rows is not important. It is also possible to omit ``PARTITION BY`` , in which case there is just one partition containing all the rows.
+We already saw that ORDER BY can be omitted if the ordering of rows is not important. 
+It is also possible to omit ``PARTITION BY`` , 
+in which case there is just one partition containing all the rows.
 
-There is another important concept associated with window functions: for each row, there is a set of rows within its partition called its *window frame* . Many (but not all) window functions act only on the rows of the window frame, rather than of the whole partition. By default, if ``ORDER BY`` is supplied then the frame consists of all rows from the start of the partition up through the current row, plus any following rows that are equal to the current row according to the ``ORDER BY`` clause. When ``ORDER BY`` is omitted the default frame consists of all rows in the partition. [#f1]_ Here is an example using ``sum`` :
+There is another important concept associated with window functions: 
+for each row, there is a set of rows within its partition called its *window frame* . 
+Many (but not all) window functions act only on the rows of the window frame, 
+rather than of the whole partition. 
+By default, if ``ORDER BY`` is supplied then the frame consists of all rows from the start of the partition up through the current row, 
+plus any following rows that are equal to the current row according to the ``ORDER BY`` clause. 
+When ``ORDER BY`` is omitted the default frame consists of all rows in the partition. [#f1]_ 
+Here is an example using ``sum`` :
 
 ::
 
@@ -581,7 +620,12 @@ There is another important concept associated with window functions: for each ro
        5200 | 47100
     (10 rows)
 
-Above, since there is no ``ORDER BY`` in the ``OVER`` clause, the window frame is the same as the partition, which for lack of ``PARTITION BY`` is the whole table; in other words each sum is taken over the whole table and so we get the same result for each output row. But if we add an ``ORDER BY`` clause, we get very different results:
+Above, since there is no ``ORDER BY`` in the ``OVER`` clause, 
+the window frame is the same as the partition, 
+which for lack of ``PARTITION BY`` is the whole table; 
+in other words each sum is taken over the whole table 
+and so we get the same result for each output row. 
+But if we add an ``ORDER BY`` clause, we get very different results:
 
 ::
 
@@ -603,11 +647,18 @@ Above, since there is no ``ORDER BY`` in the ``OVER`` clause, the window frame i
        6000 | 47100
     (10 rows)
 
-Here the sum is taken from the first (lowest) salary up through the current one, including any duplicates of the current one (notice the results for the duplicated salaries).
+Here the sum is taken from the first (lowest) salary up through the current one, 
+including any duplicates of the current one (notice the results for the duplicated salaries).
 
-Window functions are permitted only in the ``SELECT`` list and the ``ORDER BY`` clause of the query. They are forbidden elsewhere, such as in ``GROUP BY`` , ``HAVING`` and ``WHERE`` clauses. This is because they logically execute after the processing of those clauses. Also, window functions execute after regular aggregate functions. This means it is valid to include an aggregate function call in the arguments of a window function, but not vice versa.
+Window functions are permitted only in the ``SELECT`` list and the ``ORDER BY`` clause of the query. 
+They are forbidden elsewhere, such as in ``GROUP BY`` , ``HAVING`` and ``WHERE`` clauses. 
+This is because they logically execute after the processing of those clauses. 
+Also, window functions execute after regular aggregate functions. 
+This means it is valid to include an aggregate function call in the arguments of a window function, 
+but not vice versa.
 
-If there is a need to filter or group rows after the window calculations are performed, you can use a sub-select. For example:
+If there is a need to filter or group rows after the window calculations are performed, 
+you can use a sub-select. For example:
 
 ::
 
@@ -621,7 +672,11 @@ If there is a need to filter or group rows after the window calculations are per
 
 The above query only shows the rows from the inner query having ``rank`` less than 3.
 
-When a query involves multiple window functions, it is possible to write out each one with a separate ``OVER`` clause, but this is duplicative and error-prone if the same windowing behavior is wanted for several functions. Instead, each windowing behavior can be named in a ``WINDOW`` clause and then referenced in ``OVER`` . For example:
+When a query involves multiple window functions, 
+it is possible to write out each one with a separate ``OVER`` clause, 
+but this is duplicative and error-prone if the same windowing behavior is wanted for several functions. 
+Instead, each windowing behavior can be named in a ``WINDOW`` clause and then referenced in ``OVER`` . 
+For example:
 
 ::
 
