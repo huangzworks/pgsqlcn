@@ -498,25 +498,44 @@ PostgreSQL 实际上会把每条被执行的 SQL 语句当做是一个事务。
 重新取得事务块控制权的唯一手段就是使用 ``ROLLBACK`` 。
 
 
-窗口函数
-------------
+窗口函数（window function）
+--------------------------------
 
-A *window function* performs a calculation across a set of table rows 
-that are somehow related to the current row. 
-This is comparable to the type of calculation 
-that can be done with an aggregate function. 
-But unlike regular aggregate functions, 
-use of a window function does not cause rows to become grouped into a single output row 
-— the rows retain their separate identities. 
-Behind the scenes, 
-the window function is able to access more than just the current row of the query result.
+..
+    A *window function* performs a calculation across a set of table rows 
+    that are somehow related to the current row. 
 
-Here is an example that shows how to compare each employee's salary 
-with the average salary in his or her department:
+    This is comparable to the type of calculation 
+    that can be done with an aggregate function. 
+
+    But unlike regular aggregate functions, 
+    use of a window function does not cause rows to become grouped into a single output row 
+    — the rows retain their separate identities. 
+
+    Behind the scenes, 
+    the window function is able to access more than just the current row of the query result.
+
+*窗口函数*\ 可以对表格中，
+与当前行（current row）有某种关联的一组行进行计算。
+窗口函数和聚合函数执行的计算是类似的。
+窗口函数和聚合函数的不同之处在于，
+使用窗口函数并不会导致多个行被聚合为单个输出行，
+被计算的各个行将继续保留它们各自的特性。
+此外，
+窗口函数在进行计算的时候，
+还可以访问查询结果里面除当前行之外的其他行。
+
+..
+    Here is an example that shows how to compare each employee's salary 
+    with the average salary in his or her department:
+
+以下这个例子展示了怎样将每个雇员的薪水与他/她所在部门的平均薪水进行对比：
 
 ::
 
-    SELECT depname, empno, salary, avg(salary) OVER (PARTITION BY depname) FROM empsalary;
+    SELECT depname, empno, salary, 
+        avg(salary) OVER (PARTITION BY depname) 
+    FROM empsalary;
 
 ::
 
@@ -534,24 +553,63 @@ with the average salary in his or her department:
      sales     |     4 |   4800 | 4866.6666666666666667
     (10 rows)
 
-The first three output columns come directly from the table ``empsalary`` , 
-and there is one output row for each row in the table. 
-The fourth column represents an average taken across all the table rows that have the same ``depname`` value as the current row. 
-(This actually is the same function as the regular avg aggregate function, 
-but the ``OVER`` clause causes it to be treated as a window function 
-and computed across an appropriate set of rows.)
+..
+    The first three output columns come directly from the table ``empsalary`` , 
+    and there is one output row for each row in the table. 
 
-A window function call always contains an ``OVER`` clause directly following the window function's name and argument(s). 
-This is what syntactically distinguishes it from a regular function or aggregate function. 
-The ``OVER`` clause determines exactly how the rows of the query are split up for processing by the window function. 
-The ``PARTITION BY`` list within ``OVER`` specifies dividing the rows into groups, or partitions, 
-that share the same values of the ``PARTITION BY`` expression(s). 
-For each row, 
-the window function is computed across the rows that fall into the same partition as the current row.
+    The fourth column represents an average 
+    taken across all the table rows 
+    that have the same ``depname`` value as the current row. 
 
-You can also control the order in which rows are processed by window functions using ``ORDER BY`` within ``OVER`` . 
-(The window ``ORDER BY`` does not even have to match the order in which the rows are output.) 
-Here is an example:
+    (This actually is the same function as the regular avg aggregate function, 
+    but the ``OVER`` clause causes it to be treated as a window function 
+    and computed across an appropriate set of rows.)
+
+输出中的前三个列都来自于 ``empsalary`` 表格，
+而最后一个列则展示了窗口函数为每个行计算出的结果：
+窗口函数根据当前行 ``depname`` 列的值，
+计算出了 ``empsalary`` 表格中所有具有相同 ``depname`` 值的行的平均值。
+（这个窗口函数实际上和普通的平均聚合函数是同一个函数，
+只是 ``OVER`` 语句使得这个聚合函数被当做成了一个窗口函数，
+并使用它去对一组特定的行进行计算。）
+
+..
+    A window function call always contains an ``OVER`` clause 
+    directly following the window function's name and argument(s). 
+
+    This is what syntactically distinguishes it from a regular function or aggregate function. 
+
+    The ``OVER`` clause determines exactly how the rows of the query 
+    are split up for processing by the window function. 
+
+    The ``PARTITION BY`` list within ``OVER`` specifies dividing the rows into groups, or partitions, 
+    that share the same values of the ``PARTITION BY`` expression(s). 
+
+    For each row, 
+    the window function is computed across the rows 
+    that fall into the same partition as the current row.
+
+一个窗口函数调用总是包含一个 ``OVER`` 语句，
+这个语句紧跟在窗口函数的名字和参数之后，
+而这种语法也将窗口函数和普通函数以及聚合函数区别了开来。
+``OVER`` 语句决定了窗口函数在对被查询的行进行处理之前，
+是如何对那些行进行拆分的。
+至于 ``OVER`` 语句中的 ``PARTITION BY`` 表达式，
+则决定了窗口函数是如何对那些拥有相同 ``PARTITION BY`` 值的行进行分组或者分区的。
+对于表格中的每个行，
+窗口函数都会对与这个行处于相同分区的各个行进行计算。
+
+..
+    You can also control the order in which rows are processed by window functions 
+    using ``ORDER BY`` within ``OVER`` . 
+    (The window ``ORDER BY`` does not even have to match the order in which the rows are output.) 
+    Here is an example:
+
+此外，
+通过在 ``OVER`` 语句内部使用 ``ORDER BY`` 语句，
+用户可以决定窗口函数在处理各个行时所使用的顺序，
+就像这样：
+（\ ``OVER`` 语句内部的 ``ORDER BY`` 语句的值可以跟输出行时使用的 ``ORDER BY`` 语句的值不同）。
 
 ::
 
@@ -575,30 +633,93 @@ Here is an example:
      sales     |     3 |   4800 |    2
     (10 rows)
 
-As shown here, 
-the ``rank`` function produces a numerical rank within the current row's partition for each distinct ``ORDER BY`` value, 
-in the order defined by the ``ORDER BY`` clause. 
-``rank`` needs no explicit parameter, 
-because its behavior is entirely determined by the ``OVER`` clause.
+..
+    As shown here, 
+    the ``rank`` function produces a numerical rank within the current row's partition 
+    for each distinct ``PARTITION BY`` value, 
+    in the order defined by the ``ORDER BY`` clause. 
 
-The rows considered by a window function are those of the "virtual table" produced by the query's ``FROM`` clause as filtered by its ``WHERE`` , ``GROUP BY`` , and ``HAVING`` clauses if any. 
-For example, 
-a row removed because it does not meet the ``WHERE`` condition is not seen by any window function. 
-A query can contain multiple window functions that slice up the data in different ways by means of different ``OVER`` clauses, 
-but they all act on the same collection of rows defined by this virtual table.
+    ``rank`` needs no explicit parameter, 
+    because its behavior is entirely determined by the ``OVER`` clause.
 
-We already saw that ORDER BY can be omitted if the ordering of rows is not important. 
-It is also possible to omit ``PARTITION BY`` , 
-in which case there is just one partition containing all the rows.
+正如这里所示，
+``rank`` 函数将根据 ``ORDER BY`` 语句定义的顺序，
+为具有相同 ``PARTITION BY`` 值的各个分区中的每个行计算出这些行在自己所处分区中的排名（rank）。
+``rank`` 窗口函数不需要给定参数，
+因为它的行为完全由 ``OVER`` 语句决定。
 
-There is another important concept associated with window functions: 
-for each row, there is a set of rows within its partition called its *window frame* . 
-Many (but not all) window functions act only on the rows of the window frame, 
-rather than of the whole partition. 
-By default, if ``ORDER BY`` is supplied then the frame consists of all rows from the start of the partition up through the current row, 
-plus any following rows that are equal to the current row according to the ``ORDER BY`` clause. 
-When ``ORDER BY`` is omitted the default frame consists of all rows in the partition. [#f1]_ 
-Here is an example using ``sum`` :
+..
+    The rows considered by a window function 
+    are those of the "virtual table" produced by the query's ``FROM`` clause 
+    as filtered by its ``WHERE`` , ``GROUP BY`` , and ``HAVING`` clauses if any. 
+
+    For example, 
+    a row removed because it does not meet the ``WHERE`` condition is not seen by any window function. 
+
+    A query can contain multiple window functions 
+    that slice up the data in different ways 
+    by means of different ``OVER`` clauses, 
+    but they all act on the same collection of rows defined by this virtual table.
+
+查询的 ``FROM`` 语句，
+用于过滤的 ``WHERE`` 语句，
+以及 ``GROUP BY`` 语句和可能有的 ``HAVING`` 语句，
+通过这些语句，
+用户可以构建出一个“虚拟表”，
+而窗口函数则可以用于处理这些虚拟表中的行。
+举个例子，
+如果一个行因为不符合 ``WHERE`` 语句的条件而被移除了，
+那么窗口函数将不会对这个行进行处理。
+一个查询语句可以包含多个窗口函数，
+这些窗口函数可以通过不同的 ``OVER`` 语句，
+以不同的方式对数据进行切片（slice up），
+但所有窗口函数处理的都是由相同的虚拟表所定义的一组行。
+
+..
+    We already saw that ORDER BY can be omitted 
+    if the ordering of rows is not important. 
+    It is also possible to omit ``PARTITION BY`` , 
+    in which case there is just one partition containing all the rows.
+
+前面曾经说过，
+如果行的排列顺序并不重要，
+那么我们可以省略 ``ORDER BY`` 语句。
+与此类似，
+如果窗口函数要处理的是一个包含了所有行的分区，
+那么我们也可以省略 ``PARTITION BY`` 语句。
+
+..
+    There is another important concept associated with window functions: 
+    for each row, 
+    there is a set of rows within its partition called its *window frame* . 
+
+    Many (but not all) window functions act only on the rows of the window frame, 
+    rather than of the whole partition. 
+
+    By default, 
+    if ``ORDER BY`` is supplied 
+    then the frame consists of all rows from the start of the partition up through the current row, 
+    plus any following rows that are equal to the current row according to the ``ORDER BY`` clause. 
+
+    When ``ORDER BY`` is omitted 
+    the default frame consists of all rows in the partition. [#f1]_ 
+    Here is an example using ``sum`` :
+
+窗口函数还有一个重要的相关概念：
+对于每个行来说，
+它所在的分区都有一组行可以被称为这个行的\ *窗口框*\ （window frame）。
+很多（但不是所有）窗口函数都只会对窗口框中的行进行计算，
+而不是对整个分区的所有行进行计算。
+
+在默认情况下，
+如果用户使用了 ``ORDER BY`` ，
+那么窗口框将由分区开头直到当前行为止的所有行，
+以及那些在当前行之后，
+但是与当前行的 ``ORDER BY`` 结果相等的行组成。
+与此相反，
+如果用户没有给定 ``ORDER BY`` ，
+那么默认的窗口框将由分区中的所有行组成。
+以下展示了一个使用 ``sum`` 窗口函数的例子：
 
 ::
 
@@ -620,12 +741,28 @@ Here is an example using ``sum`` :
        5200 | 47100
     (10 rows)
 
-Above, since there is no ``ORDER BY`` in the ``OVER`` clause, 
-the window frame is the same as the partition, 
-which for lack of ``PARTITION BY`` is the whole table; 
-in other words each sum is taken over the whole table 
-and so we get the same result for each output row. 
-But if we add an ``ORDER BY`` clause, we get very different results:
+..
+    Above, 
+    since there is no ``ORDER BY`` in the ``OVER`` clause, 
+    the window frame is the same as the partition, 
+    which for lack of ``PARTITION BY`` is the whole table; 
+    in other words each sum is taken over the whole table 
+    and so we get the same result for each output row. 
+
+    But if we add an ``ORDER BY`` clause, 
+    we get very different results:
+
+上面这个查询因为没有在 ``OVER`` 语句里面加上 ``ORDER BY`` 语句，
+所以这个查询要处理的窗口框和分区一样，
+并且因为这个查询没有用到 ``PARTITION BY`` 语句，
+所以这个分区将包含整个表格的所有行：
+换句话说，
+每个总和（sum）都是通过对整个表格进行计算得出的，
+所以对于表格中的每个行，
+查询都给出了相同的结果。
+
+不过如果我们给这个查询加上 ``ORDER BY`` 语句的话，
+那么将得到一个非常不同的结果：
 
 ::
 
@@ -647,18 +784,40 @@ But if we add an ``ORDER BY`` clause, we get very different results:
        6000 | 47100
     (10 rows)
 
-Here the sum is taken from the first (lowest) salary up through the current one, 
-including any duplicates of the current one (notice the results for the duplicated salaries).
+..
+    Here the sum is taken from the first (lowest) salary up through the current one, 
+    including any duplicates of the current one 
+    (notice the results for the duplicated salaries).
 
-Window functions are permitted only in the ``SELECT`` list and the ``ORDER BY`` clause of the query. 
-They are forbidden elsewhere, such as in ``GROUP BY`` , ``HAVING`` and ``WHERE`` clauses. 
-This is because they logically execute after the processing of those clauses. 
-Also, window functions execute after regular aggregate functions. 
-This means it is valid to include an aggregate function call in the arguments of a window function, 
-but not vice versa.
+这次的总和是通过将第一行至到当前行的所有薪水值都相加起来，
+然后再加上所有与当前行具有相同薪水值的行计算得出的
+（注意结果中那些具有相同薪水值的行的计算结果）。
 
-If there is a need to filter or group rows after the window calculations are performed, 
-you can use a sub-select. For example:
+..
+    Window functions are permitted only in the ``SELECT`` list and the ``ORDER BY`` clause of the query. 
+    They are forbidden elsewhere, 
+    such as in ``GROUP BY`` , ``HAVING`` and ``WHERE`` clauses. 
+    This is because they logically execute after the processing of those clauses. 
+    Also, window functions execute after regular aggregate functions. 
+    This means it is valid to include an aggregate function call in the arguments of a window function, 
+    but not vice versa.
+
+窗口函数只能在 ``SELECT`` 列表或者查询的 ``ORDER BY`` 语句中使用，
+它不能用在 ``GROUP BY`` 、 ``HAVING`` 和 ``WHERE`` 等语句中，
+这是因为窗口函数在逻辑上需要等到 ``GROUP BY`` 这些语句执行完了之后再执行。
+此外，
+窗口函数也会在普通的聚合函数执行完毕之后执行，
+这意味着我们可以将聚合函数用作窗口函数的参数，
+但反过来则不可以。
+
+..
+    If there is a need to filter or group rows 
+    after the window calculations are performed, 
+    you can use a sub-select. 
+    For example:
+
+用户可以在执行窗口函数之后，
+使用子查询对计算所得的行进行过滤或者分组：
 
 ::
 
@@ -670,13 +829,32 @@ you can use a sub-select. For example:
       ) AS ss
     WHERE pos < 3;
 
-The above query only shows the rows from the inner query having ``rank`` less than 3.
+..
+    The above query only shows the rows from the inner query having ``rank`` less than 3.
 
-When a query involves multiple window functions, 
-it is possible to write out each one with a separate ``OVER`` clause, 
-but this is duplicative and error-prone if the same windowing behavior is wanted for several functions. 
-Instead, each windowing behavior can be named in a ``WINDOW`` clause and then referenced in ``OVER`` . 
-For example:
+这个查询只会展示内查询里面，
+``rank`` 值小于 3 的行。
+
+..
+    When a query involves multiple window functions, 
+    it is possible to write out each one with a separate ``OVER`` clause, 
+    but this is duplicative and error-prone 
+    if the same windowing behavior is wanted for several functions. 
+
+    Instead, 
+    each windowing behavior can be named in a ``WINDOW`` clause 
+    and then referenced in ``OVER`` . 
+    For example:
+
+当查询需要用到多个窗口函数时，
+用户可以用多个 ``OVER`` 语句将这些窗口函数一个接一个地写出来，
+但是这种做法在多个函数需要进行相同的窗口计算（windowing behavior）时，
+非常容易出错，
+并且还会产生重复的计算。
+为了解决这个问题，
+我们可以在 ``WINDOW`` 语句里面对需要进行的窗口计算进行命名，
+然后在 ``OVER`` 语句里面引用这些窗口计算，
+就像这样：
 
 ::
 
@@ -684,9 +862,17 @@ For example:
       FROM empsalary
       WINDOW w AS (PARTITION BY depname ORDER BY salary DESC);
 
-More details about window functions can be found in `Section 4.2.8 <http://www.postgresql.org/docs/devel/static/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS>`_\ , `Section 9.21 <http://www.postgresql.org/docs/devel/static/functions-window.html>`_\ , `Section 7.2.5 <http://www.postgresql.org/docs/devel/static/queries-table-expressions.html#QUERIES-WINDOW>`_\ , and the `SELECT <http://www.postgresql.org/docs/devel/static/sql-select.html>`_ reference page.
+..
+    More details about window functions can be found in `Section 4.2.8 <http://www.postgresql.org/docs/devel/static/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS>`_\ , `Section 9.21 <http://www.postgresql.org/docs/devel/static/functions-window.html>`_\ , `Section 7.2.5 <http://www.postgresql.org/docs/devel/static/queries-table-expressions.html#QUERIES-WINDOW>`_\ , and the `SELECT <http://www.postgresql.org/docs/devel/static/sql-select.html>`_ reference page.
 
-.. [#f1] There are options to define the window frame in other ways, but this tutorial does not cover them. See `Section 4.2.8 <http://www.postgresql.org/docs/devel/static/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS>`_ for details.
+关于窗口函数的更多信息，
+请查看 `4.2.8 节 <http://www.postgresql.org/docs/devel/static/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS>`_ 、
+`9.21 节 <http://www.postgresql.org/docs/devel/static/functions-window.html>`_ 、
+`7.2.5 节 <http://www.postgresql.org/docs/devel/static/queries-table-expressions.html#QUERIES-WINDOW>`_ 以及 
+`SELECT 命令的参考页面 <http://www.postgresql.org/docs/devel/static/sql-select.html>`_ 。
+
+..
+    .. [#f1] There are options to define the window frame in other ways, but this tutorial does not cover them. See `Section 4.2.8 <http://www.postgresql.org/docs/devel/static/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS>`_ for details.
 
 
 继承
