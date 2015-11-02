@@ -1,0 +1,297 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>数据操作 &mdash; PostgreSQL 数据库文档</title>
+    
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '9.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/translations.js"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="top" title="PostgreSQL 数据库文档" href="../index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             accesskey="I">索引</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PostgreSQL 数据库文档</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">数据操作</a><ul>
+<li><a class="reference internal" href="#id2">插入数据</a></li>
+<li><a class="reference internal" href="#id3">更新数据</a></li>
+<li><a class="reference internal" href="#id4">删除数据</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/sql/dml.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的术语，模块，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="id1">
+<h1>数据操作<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<p>前面的章节介绍了创建表格和其他结构的方法，
+并说明了如何使用这些表格和结构去储存数据，
+现在是时候考虑怎样使用数据去填充表格了。
+本章将介绍插入、更新和删除表格数据的方法，
+而之后的一章将介绍如何从表格里面获取已有的数据。</p>
+<div class="section" id="id2">
+<h2>插入数据<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>一个新创建的表格是不包含任何数据的。
+为了让一个数据库能够发挥它的实际作用，
+我们必须向数据库里面插入数据。
+插入操作是以行为单位进行的：
+尽管用户可以一次插入多个行，
+但是却不能插入少于一个行的数据 ——
+即使用户在执行插入操作时只给出了某些列的值，
+数据库也会为这个插入操作创建一个完整的行。</p>
+<p><code class="docutils literal"><span class="pre">INSERT</span></code> 命令接受表格的名字和列的值作为参数，
+并在表格里面创建一个新行。
+举个例子，
+对于第 5 章介绍的 <code class="docutils literal"><span class="pre">products</span></code> 表格来说：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">products</span> <span class="p">(</span>
+    <span class="n">product_no</span> <span class="nb">integer</span><span class="p">,</span>
+    <span class="k">name</span> <span class="nb">text</span><span class="p">,</span>
+    <span class="n">price</span> <span class="nb">numeric</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<p>以下是一个使用 <code class="docutils literal"><span class="pre">INSERT</span></code> 命令去插入新行的例子：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">products</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mf">1</span><span class="p">,</span> <span class="s1">&#39;Cheese&#39;</span><span class="p">,</span> <span class="mf">9.99</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>用户需要根据列在表格中的次序，
+逐一列出每个数据值，
+并在每个数据值之间使用逗号进行分割。
+通常情况下，
+数据值都是字面量（literals，也即是常量），
+但使用标量（scalar）作为数据值也是可行的。</p>
+<p>上面展示的 <code class="docutils literal"><span class="pre">INSERT</span></code> 语法有一个缺点，
+它要求用户记住各个列在表格中的次序，
+不过这个问题可以通过显式地列出各个列来解决。
+举个例子，
+以下两个命令将产生完全相同的效果：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">products</span> <span class="p">(</span><span class="n">product_no</span><span class="p">,</span> <span class="k">name</span><span class="p">,</span> <span class="n">price</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mf">1</span><span class="p">,</span> <span class="s1">&#39;Cheese&#39;</span><span class="p">,</span> <span class="mf">9.99</span><span class="p">);</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">products</span> <span class="p">(</span><span class="k">name</span><span class="p">,</span> <span class="n">price</span><span class="p">,</span> <span class="n">product_no</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;Cheese&#39;</span><span class="p">,</span> <span class="mf">9.99</span><span class="p">,</span> <span class="mf">1</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>很多用户都认为总是列出各个列的名字是一种更好的编程风格。</p>
+<p>如果你在插入行的时候，
+缺少某个列的值，
+那么你可以在执行 <code class="docutils literal"><span class="pre">INSERT</span></code> 命令时省略那些没有值的域。
+在这种情况下，
+那些没有被设置值的列将被默认值填充。
+就像这样：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">products</span> <span class="p">(</span><span class="n">product_no</span><span class="p">,</span> <span class="k">name</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mf">1</span><span class="p">,</span> <span class="s1">&#39;Cheese&#39;</span><span class="p">);</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">products</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mf">1</span><span class="p">,</span> <span class="s1">&#39;Cheese&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>第二种语法是 PostgreSQL 的扩展语法：
+这种语法会按照给定值的数量，
+从左到右地填充行的各个列，
+而那些没有给出值的行则使用默认值进行填充。</p>
+<p>为了保证清晰性，
+用户也可以显式地要求使用默认值去填充某个单独的列或者整个行：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">products</span> <span class="p">(</span><span class="n">product_no</span><span class="p">,</span> <span class="k">name</span><span class="p">,</span> <span class="n">price</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mf">1</span><span class="p">,</span> <span class="s1">&#39;Cheese&#39;</span><span class="p">,</span> <span class="k">DEFAULT</span><span class="p">);</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">products</span> <span class="k">DEFAULT</span> <span class="k">VALUES</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>用户也可以在一条命令里面插入多个行：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">products</span> <span class="p">(</span><span class="n">product_no</span><span class="p">,</span> <span class="k">name</span><span class="p">,</span> <span class="n">price</span><span class="p">)</span> <span class="k">VALUES</span>
+    <span class="p">(</span><span class="mf">1</span><span class="p">,</span> <span class="s1">&#39;Cheese&#39;</span><span class="p">,</span> <span class="mf">9.99</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">2</span><span class="p">,</span> <span class="s1">&#39;Bread&#39;</span><span class="p">,</span> <span class="mf">1.99</span><span class="p">),</span>
+    <span class="p">(</span><span class="mf">3</span><span class="p">,</span> <span class="s1">&#39;Milk&#39;</span><span class="p">,</span> <span class="mf">2.99</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>更新数据<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<p>对已经存在于数据库中的数据进行修改，
+这一操作被称为更新操作。
+用户可以更新表格中的某个行，
+又或者所有行，
+又或者其中一部分行。
+每个列可以单独被更新，
+其他列不会受到影响。</p>
+<p><code class="docutils literal"><span class="pre">UPDATE</span></code> 命令可以对一个已经存在的行进行更新，
+这个命令需要三方面的信息：</p>
+<ol class="arabic simple">
+<li>需要更新的表格的名字以及列的名字。</li>
+<li>设置给列的新值。</li>
+<li>指定需要更新的行。</li>
+</ol>
+<p>本文档的第 5 章曾经说过，
+在通常情况下，
+SQL 并不会为每个行都提供一个唯一标识符。
+由于这个原因，
+用户有时候并不能直接指定需要更新的行；
+而是要指定一些条件，
+并通过这些条件来决定表格中的哪些行将被更新。</p>
+<p>只有当用户拥有了表格中某个行的主键时，
+他才能够通过选择一个与主键相匹配的条件，
+确实地对某个单独的行进行更新。
+图形数据库访问工具通常会利用这个原理来实现单独更新某个列的功能。</p>
+<p>举个例子，
+以下这个语句将从 <code class="docutils literal"><span class="pre">products</span></code> 表格里面找出所有 <code class="docutils literal"><span class="pre">price</span></code> 值为 <code class="docutils literal"><span class="pre">5</span></code> 的行，
+并把它们的 <code class="docutils literal"><span class="pre">price</span></code> 值修改为 <code class="docutils literal"><span class="pre">10</span></code> ：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">UPDATE</span> <span class="n">products</span> <span class="k">SET</span> <span class="n">price</span> <span class="o">=</span> <span class="mf">10</span> <span class="k">WHERE</span> <span class="n">price</span> <span class="o">=</span> <span class="mf">5</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>这个命令可能会造成零个、一个或者很多个行被更新。
+执行一个没有实际效果的更新操作并不会引起错误。</p>
+<p>让我们来详细地分析上面的这个命令。
+首先，
+跟在关键字 <code class="docutils literal"><span class="pre">UPDATE</span></code> 之后的是表格的名字。
+As usual,
+the table name can be schema-qualified,
+otherwise it is looked up in the path.
+接着，
+跟着关键字 <code class="docutils literal"><span class="pre">SET</span></code> 之后的是列的名字，
+一个等号，
+以及要设置给列的新值。
+列的新值既可以是任何标量表达式（scalar expression），
+也可以是一个常量。
+比如说，
+如果你想要将所有产品的价格都提高 10% ，
+那么可以执行以下命令：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">UPDATE</span> <span class="n">products</span> <span class="k">SET</span> <span class="n">price</span> <span class="o">=</span> <span class="n">price</span> <span class="o">*</span> <span class="mf">1.10</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>如你所见，
+一个表达式可以通过引用行里面已有的值去构建新值。
+上面展示的 <code class="docutils literal"><span class="pre">UPDATE</span></code> 命令都没有用到 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句：
+如果用户在执行 <code class="docutils literal"><span class="pre">UPDATE</span></code> 命令时没有给定 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句，
+那么表格中的所有行都将被更新；
+另一方面，
+如果用户给定了 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句，
+那么只有那些符合 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句中指定条件的语句会被更新。
+一个需要注意的地方是，
+当等号出现在 <code class="docutils literal"><span class="pre">SET</span></code> 语句里面时，
+它表示的是一个赋值操作；
+而当等号出现在 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句里面时，
+它表示的是一次对比操作；
+这两种操作是完全不同的两种操作。
+另外需要注意的一点是，
+虽然 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句中的表达式需要计算出一个布尔值结果，
+但这个表达式并不总是为一个相等测试条件：
+除了等号之外，
+PostgreSQL 还提供了很多操作符可供使用，
+具体的信息将在本文档的第 9 章进行介绍。</p>
+<p>通过在 <code class="docutils literal"><span class="pre">SET</span></code> 语句里面列出多个赋值等式，
+用户可以在一条 <code class="docutils literal"><span class="pre">UPDATE</span></code> 命令里面对多个列进行更新。
+就像这样：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">UPDATE</span> <span class="n">mytable</span> <span class="k">SET</span> <span class="n">a</span> <span class="o">=</span> <span class="mf">5</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="mf">3</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="mf">1</span> <span class="k">WHERE</span> <span class="n">a</span> <span class="o">&gt;</span> <span class="mf">0</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id4">
+<h2>删除数据<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p>到目前为止，
+我们学习了将数据添加到表格里面的方法，
+以及对表格里面的数据进行修改的方法，
+那么我们剩下要学习的自然就是移除表格中无用数据的方法了。</p>
+<p>就像添加数据时需要将整个行添加到表格里面一样，
+要从表格里面移除数据，
+我们也必须移除整个行。
+上一节曾经提到过，
+SQL 并没有提供能够直接访问某个单独的行的方法。
+因此，
+行的移除操作只能通过指定与被移除行相匹配的条件来完成。</p>
+<p>如果你拥有表格中某个行的主键的话，
+那么你可以通过那个主键来精确地移除那个行。
+除此之外，
+你也可以通过指定条件来删除一组与条件相匹配的行，
+又或者直接一次性地移除表格中的所有行。</p>
+<p>删除行需要用到 <code class="docutils literal"><span class="pre">DELETE</span></code> 命令，
+这个命令的语法和 <code class="docutils literal"><span class="pre">UPDATE</span></code> 命令非常相似。
+举个例子，
+通过执行以下命令，
+我们可以从 <code class="docutils literal"><span class="pre">products</span></code> 表格里面移除价格等于 <code class="docutils literal"><span class="pre">10</span></code> 的所有行：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">DELETE</span> <span class="k">FROM</span> <span class="n">products</span> <span class="k">WHERE</span> <span class="n">price</span> <span class="o">=</span> <span class="mf">10</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>另一方面，
+如果我们直接执行以下命令：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">DELETE</span> <span class="k">FROM</span> <span class="n">products</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>那么 <code class="docutils literal"><span class="pre">products</span></code> 表格中的所有行都将被删除！
+请谨慎地使用这个命令。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             >索引</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PostgreSQL 数据库文档</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; 版权所有 2015, 黄健宏.
+      由 <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1 创建。
+    </div>
+  </body>
+</html>

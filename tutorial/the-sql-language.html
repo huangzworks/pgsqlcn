@@ -1,0 +1,728 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SQL 语言简介 &mdash; PostgreSQL 数据库文档</title>
+    
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '9.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/translations.js"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="top" title="PostgreSQL 数据库文档" href="../index.html" />
+    <link rel="next" title="高级特性" href="advanced-features.html" />
+    <link rel="prev" title="入门须知" href="getting-started.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="advanced-features.html" title="高级特性"
+             accesskey="N">下一页</a> |</li>
+        <li class="right" >
+          <a href="getting-started.html" title="入门须知"
+             accesskey="P">上一页</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PostgreSQL 数据库文档</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SQL 语言简介</a><ul>
+<li><a class="reference internal" href="#id1">引言</a></li>
+<li><a class="reference internal" href="#id2">概念</a></li>
+<li><a class="reference internal" href="#id3">创建新的表格</a></li>
+<li><a class="reference internal" href="#id4">将行插入到表格</a></li>
+<li><a class="reference internal" href="#id5">表格查询</a></li>
+<li><a class="reference internal" href="#id6">连接多个表格</a></li>
+<li><a class="reference internal" href="#id7">聚合函数</a></li>
+<li><a class="reference internal" href="#id9">更新</a></li>
+<li><a class="reference internal" href="#id10">删除</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="getting-started.html"
+                        title="上一章">入门须知</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="advanced-features.html"
+                        title="下一章">高级特性</a></p>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/tutorial/the-sql-language.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的术语，模块，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="sql">
+<h1>SQL 语言简介<a class="headerlink" href="#sql" title="永久链接至标题">¶</a></h1>
+<div class="section" id="id1">
+<h2>引言<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h2>
+<p>本章将介绍一些使用 SQL 去执行简单操作的方法。
+这个教程介绍的都是一些入门知识，
+这里并不会对 SQL 进行完整的介绍。
+不过关于 SQL 有很多好的参考书可以参考，
+比如《Understanding the New SQL》和《A Guide to the SQL Standard》。
+另外需要注意的一点是，
+某些 PostgreSQL 语言的特性是扩展自 SQL 标准的，
+它们并不属于 SQL 标准。</p>
+<p>接下来的示例将假设你已经按照前面介绍的方法创建了一个名为 <code class="docutils literal"><span class="pre">mydb</span></code> 的数据库，
+并且已经启动了 <code class="docutils literal"><span class="pre">psql</span></code> 。</p>
+<p>这个教程展示的示例也可以在 PostgreSQL 的源码发行版里面的 <code class="docutils literal"><span class="pre">src/tutorial</span></code> 文件夹里面找到。
+（但是 PostgreSQL 的二进制分发版可能并没有包含这些文件。）
+要使用这些文件，
+你可以进入到文件的文件夹里面，
+并执行以下命令：</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd</span> ..../src/tutorial
+<span class="nv">$ </span>make
+</pre></div>
+</div>
+<p>上面的这个命令将创建出一些脚本，
+并对包含了用户定义的函数和类型的 C 文件进行编译。
+之后，
+为了跟随教程进行操作，
+我们需要执行以下命令：</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd</span> ..../tutorial
+<span class="nv">$ </span>psql -s mydb
+...
+
+<span class="nv">mydb</span><span class="o">=</span>&gt; <span class="se">\i</span> basics.sql
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">-s</span></code> 选项可以让 <code class="docutils literal"><span class="pre">psql</span></code> 程序进入单步模式，
+使得 <code class="docutils literal"><span class="pre">psql</span></code> 在将每条语句发送至服务器之前暂停。
+<code class="docutils literal"><span class="pre">\i</span></code> 命令将从指定的文件里面读入命令。
+本节要用到的命令都包含在了 <code class="docutils literal"><span class="pre">basics.sql</span></code> 文件里面。</p>
+</div>
+<div class="section" id="id2">
+<h2>概念<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>PostgreSQL 是一个<em>关系数据库管理系统</em>（RDBMS），
+它负责对储存在<em>关系</em>（relation）里面的数据进行管理，
+而关系本质上就是<em>表格</em>（table）在数学上的对应术语。
+在当今世界，
+将数据储存到表格里面的做法是如此地常见，
+看上去就像是理所当然似的，
+但实际上目前还是存在着好几种不同的数据库组织方法。
+比如 Unix 这一类系统上面就使用继承数据库去处理文件和文件夹，
+而更现代化的开发可能会用到面向对象数据库。</p>
+<p>数据库中的每个表格都是<em>行</em>（row）的具名集合（named collection），
+这些行由它们在表格中所属的<em>列</em>（column）进行命名，
+并且每个列都属于某种指定的数据类型。
+尽管列在每一行中的位置都是固定的，
+并且用户也可以在打印行的时候，
+显式地对行进行排序，
+但是我们需要记住，
+SQL 并不会以任何方式保证行在表格中的位置。</p>
+<p>不同的表格会被组织到不同的数据库里面，
+而由单个 PostgreSQL 服务器实例（instance）管理的多个数据库则构成了一个数据库<em>集群</em>（cluster）。</p>
+</div>
+<div class="section" id="id3">
+<h2>创建新的表格<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<p>通过为表格指定一个名字，
+并为表格的所有列指定名字和类型，
+我们可以创建出一个新的表格：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">weather</span> <span class="p">(</span>
+    <span class="n">city</span>            <span class="nb">varchar</span><span class="p">(</span><span class="mf">80</span><span class="p">),</span>
+    <span class="n">temp_lo</span>         <span class="nb">int</span><span class="p">,</span>           <span class="c1">-- 最低温度</span>
+    <span class="n">temp_hi</span>         <span class="nb">int</span><span class="p">,</span>           <span class="c1">-- 最高温度</span>
+    <span class="n">prcp</span>            <span class="nb">real</span><span class="p">,</span>          <span class="c1">-- 降雨量（precipitation）</span>
+    <span class="nb">date</span>            <span class="nb">date</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<p>在输入表格的定义时，
+你可以在定义中加入空行，
+<code class="docutils literal"><span class="pre">psql</span></code> 会正确地识别这些空行，
+并将分号 <code class="docutils literal"><span class="pre">;</span></code> 看做是输入的终结。</p>
+<p>用户可以自由地在 SQL 命令中使用空白（包括空格、制表符和新行）。
+这意味着用户可以以不同的对齐方式输入上面展示的命令，
+又或者将所有命令都放到同一行里面。
+两个破折号 <code class="docutils literal"><span class="pre">--</span></code> 用于引出注释，
+位于注释之后的内容将被忽略，
+注释的效果会一直延续到那一行的结尾。
+在一般情况下，
+SQL 并不会区分关键词和标识符的大小写，
+除非用户使用双引号去显式地保留标识符的大小写
+（上面展示的例子并没有这样做）。</p>
+<p><code class="docutils literal"><span class="pre">varchar(80)</span></code> 指定了一种数据类型，
+这种数据类型可以储存包含任意字符的字符串，
+但这个字符串的长度不能超过 80 个字。
+<code class="docutils literal"><span class="pre">int</span></code> 是标准的整数类型。
+<code class="docutils literal"><span class="pre">real</span></code> 类型用于储存单精度浮点数。
+<code class="docutils literal"><span class="pre">date</span></code> 类型则用于储存日期。
+（在上面的定义中，
+名字为 <code class="docutils literal"><span class="pre">date</span></code> 的列的数据类型同样为 <code class="docutils literal"><span class="pre">date</span></code> ，
+这种做法到底是好是坏则是一个见仁见智的问题。）</p>
+<p>PostgreSQL 支持包括 <code class="docutils literal"><span class="pre">int</span></code> 、 <code class="docutils literal"><span class="pre">smallint</span></code> 、 <code class="docutils literal"><span class="pre">real</span></code> 、 双精度浮点数、 <code class="docutils literal"><span class="pre">char(N)</span></code> 、 <code class="docutils literal"><span class="pre">varchar(N)</span></code> 、 <code class="docutils literal"><span class="pre">date</span></code> 、 <code class="docutils literal"><span class="pre">timestamp</span></code> 、 <code class="docutils literal"><span class="pre">interval</span></code> 在内的标准 SQL 类型，
+一些通用类型（general utility）以及一系列丰富多样的地理类型（geometric types）。
+除此之外，
+PostgreSQL 还允许用户自行制定任意数量的用户定义数据类型（user-defined data types）。
+因为这个原因，
+除了那些 SQL 标准中定义的数据类型之外，
+PostgreSQL 中的类型名都不是语法上的关键字（key words）。</p>
+<p>第二个表定义将展示如何储存城市以及城市的地理位置：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">cities</span> <span class="p">(</span>
+    <span class="k">name</span>            <span class="nb">varchar</span><span class="p">(</span><span class="mf">80</span><span class="p">),</span>
+    <span class="k">location</span>        <span class="nb">point</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<p>表格定义中展示的 <code class="docutils literal"><span class="pre">point</span></code> 类型是其中一种 PostgreSQL 特有数据类型。</p>
+<p>最后，
+如果你不再需要某个表格，
+又或者想要以不同的定义重新创建某个表格，
+那么你可以使用以下命令去移除那个表格：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">DROP</span> <span class="k">TABLE</span> <span class="n">tablename</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id4">
+<h2>将行插入到表格<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">INSERT</span></code> 语句用于将一个行插入到表格里面：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">weather</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;San Francisco&#39;</span><span class="p">,</span> <span class="mf">46</span><span class="p">,</span> <span class="mf">50</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;1994-11-27&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>注意所有数据类型都使用相当明显的输入格式。
+非数字值的常量通常由单引号 <code class="docutils literal"><span class="pre">'</span></code> 包围，
+就像上面的例子所展示的那样。
+数据类型在接受输入方面实际上是非常灵活的，
+不过在这个教程里面，
+我们只会使用那些意义明确的格式。</p>
+<p><code class="docutils literal"><span class="pre">point</span></code> 类型要求一对坐标点作为输入，
+就像这样：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">cities</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;San Francisco&#39;</span><span class="p">,</span> <span class="s1">&#39;(-194.0, 53.0)&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>目前展示过的两种 <code class="docutils literal"><span class="pre">INSERT</span></code> 语法都要求你记住表格中各个列的排列顺序，
+但以下这种语法允许你显式地指定各个值要被插入到哪个列里面：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">weather</span> <span class="p">(</span><span class="n">city</span><span class="p">,</span> <span class="n">temp_lo</span><span class="p">,</span> <span class="n">temp_hi</span><span class="p">,</span> <span class="n">prcp</span><span class="p">,</span> <span class="nb">date</span><span class="p">)</span>
+    <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;San Francisco&#39;</span><span class="p">,</span> <span class="mf">43</span><span class="p">,</span> <span class="mf">57</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;1994-11-29&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>通过这种语法，
+用户可以以不同的顺序列出表格中的各个列，
+又或者省略某个列。
+比如说，
+如果 <code class="docutils literal"><span class="pre">Hayward</span></code> 城市的降雨量是未知的，
+那么我们可以执行以下 <code class="docutils literal"><span class="pre">INSERT</span></code> 语句：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">weather</span> <span class="p">(</span><span class="nb">date</span><span class="p">,</span> <span class="n">city</span><span class="p">,</span> <span class="n">temp_hi</span><span class="p">,</span> <span class="n">temp_lo</span><span class="p">)</span>
+    <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;1994-11-29&#39;</span><span class="p">,</span> <span class="s1">&#39;Hayward&#39;</span><span class="p">,</span> <span class="mf">54</span><span class="p">,</span> <span class="mf">37</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>比起隐式地依赖列的定义顺序，
+很多开发者都认为显式地列出各个列是一种更好的风格。</p>
+<p>请你键入上面展示的所有命令，
+以便获得接下来的章节将要用到的数据。</p>
+<p>用户也可以通过 <code class="docutils literal"><span class="pre">COPY</span></code> 命令，
+从文本文件里面载入大量数据。
+因为 <code class="docutils literal"><span class="pre">COPY</span></code> 命令为这种用法做了优化，
+所以使用 <code class="docutils literal"><span class="pre">COPY</span></code> 命令载入数据的速度一般会比 <code class="docutils literal"><span class="pre">INSERT</span></code> 语句快一些，
+不过 <code class="docutils literal"><span class="pre">COPY</span></code> 命令的灵活性比 <code class="docutils literal"><span class="pre">INSERT</span></code> 语句要差一些。</p>
+<p>以下是一个使用 <code class="docutils literal"><span class="pre">COPY</span></code> 命令载入数据的例子：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">COPY</span> <span class="n">weather</span> <span class="k">FROM</span> <span class="s1">&#39;/home/user/weather.txt&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>因为读入源码文件的工作是由后端进程而不是客户端进程负责执行的，
+所以用户指示 <code class="docutils literal"><span class="pre">COPY</span></code> 命令去读取的源码文件必须对正在运行后端进程的机器可用。
+要了解关于 <code class="docutils literal"><span class="pre">COPY</span></code> 命令的更多信息，
+请查看 <a class="reference external" href="http://www.postgresql.org/docs/9.5/static/sql-copy.html">COPY 命令的文档</a>。</p>
+</div>
+<div class="section" id="id5">
+<h2>表格查询<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<p>为了从表格里面获取数据，
+我们需要对表格进行<em>查询</em>。
+查询一般由 SQL 的 <code class="docutils literal"><span class="pre">SELECT</span></code> 语句负责执行，
+一条 <code class="docutils literal"><span class="pre">SELECT</span></code> 语句通常由一个选择列表（select list）、一个表格列表（table list）以及一个可选的条件构成：
+其中选择列表用于指定需要返回的列，
+表格列表用于指定 <code class="docutils literal"><span class="pre">SELECT</span></code> 语句需要从哪个表格里面获取数据，
+而可选的条件则用于指定查询时的限制条件。</p>
+<p>举个例子，
+要从 <code class="docutils literal"><span class="pre">weather</span></code> 表格里面获取所有行，
+我们可以输入以下语句：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">weather</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>上面这个查询语句中的 <code class="docutils literal"><span class="pre">*</span></code> 号代表“所有列”，
+因此这个语句的查询结果和以下这个语句完全一样：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">city</span><span class="p">,</span> <span class="n">temp_lo</span><span class="p">,</span> <span class="n">temp_hi</span><span class="p">,</span> <span class="n">prcp</span><span class="p">,</span> <span class="nb">date</span> <span class="k">FROM</span> <span class="n">weather</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>这两条 <code class="docutils literal"><span class="pre">SELECT</span></code> 语句的结果为：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre>     <span class="n">city</span>      <span class="o">|</span> <span class="n">temp_lo</span> <span class="o">|</span> <span class="n">temp_hi</span> <span class="o">|</span> <span class="n">prcp</span> <span class="o">|</span>    <span class="nb">date</span>
+<span class="c1">---------------+---------+---------+------+------------</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">46</span> <span class="o">|</span>      <span class="mf">50</span> <span class="o">|</span> <span class="mf">0.25</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">27</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">43</span> <span class="o">|</span>      <span class="mf">57</span> <span class="o">|</span>    <span class="mf">0</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span>
+ <span class="n">Hayward</span>       <span class="o">|</span>      <span class="mf">37</span> <span class="o">|</span>      <span class="mf">54</span> <span class="o">|</span>      <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span>
+<span class="p">(</span><span class="mf">3</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>除了编写简单的列引用之外，
+用户还可以在选择列表里面编写表达式，
+就像这样：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">city</span><span class="p">,</span> <span class="p">(</span><span class="n">temp_hi</span><span class="o">+</span><span class="n">temp_lo</span><span class="p">)</span><span class="o">/</span><span class="mf">2</span> <span class="k">AS</span> <span class="n">temp_avg</span><span class="p">,</span> <span class="nb">date</span> <span class="k">FROM</span> <span class="n">weather</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>上面的这个语句将产生以下结果：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre>     <span class="n">city</span>      <span class="o">|</span> <span class="n">temp_avg</span> <span class="o">|</span>    <span class="nb">date</span>
+<span class="c1">---------------+----------+------------</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>       <span class="mf">48</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">27</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>       <span class="mf">50</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span>
+ <span class="n">Hayward</span>       <span class="o">|</span>       <span class="mf">45</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span>
+<span class="p">(</span><span class="mf">3</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>注意 <code class="docutils literal"><span class="pre">AS</span></code> 语句是如何对输出的列进行重命名的。（<code class="docutils literal"><span class="pre">AS</span></code> 语句是可选的。）</p>
+<p>查询可以通过添加 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句来指定哪些行能够被返回。</p>
+<p><code class="docutils literal"><span class="pre">WHERE</span></code> 语句包含一个布尔（真值）表达式，
+只有哪些能够让布尔表达式返回真值的行会被返回。
+<code class="docutils literal"><span class="pre">WHERE</span></code> 语句的表达式可以包含常用的布尔操作符，
+比如 <code class="docutils literal"><span class="pre">AND</span></code> 、 <code class="docutils literal"><span class="pre">OR</span></code> 和 <code class="docutils literal"><span class="pre">NOT</span></code> 。
+举个例子，
+以下这个语句只会返回 San Francisco 在雨天时的天气：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">weather</span>
+    <span class="k">WHERE</span> <span class="n">city</span> <span class="o">=</span> <span class="s1">&#39;San Francisco&#39;</span> <span class="k">AND</span> <span class="n">prcp</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>执行上面这个语句将得到以下结果：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre>     <span class="n">city</span>      <span class="o">|</span> <span class="n">temp_lo</span> <span class="o">|</span> <span class="n">temp_hi</span> <span class="o">|</span> <span class="n">prcp</span> <span class="o">|</span>    <span class="nb">date</span>
+<span class="c1">---------------+---------+---------+------+------------</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">46</span> <span class="o">|</span>      <span class="mf">50</span> <span class="o">|</span> <span class="mf">0.25</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">27</span>
+<span class="p">(</span><span class="mf">1</span> <span class="k">row</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>通过使用可选的 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> 语句，
+用户可以让查询结果以有序的方式返回：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">weather</span>
+    <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">city</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>执行上面这个语句将得到以下结果：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre>     <span class="n">city</span>      <span class="o">|</span> <span class="n">temp_lo</span> <span class="o">|</span> <span class="n">temp_hi</span> <span class="o">|</span> <span class="n">prcp</span> <span class="o">|</span>    <span class="nb">date</span>
+<span class="c1">---------------+---------+---------+------+------------</span>
+ <span class="n">Hayward</span>       <span class="o">|</span>      <span class="mf">37</span> <span class="o">|</span>      <span class="mf">54</span> <span class="o">|</span>      <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">43</span> <span class="o">|</span>      <span class="mf">57</span> <span class="o">|</span>    <span class="mf">0</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">46</span> <span class="o">|</span>      <span class="mf">50</span> <span class="o">|</span> <span class="mf">0.25</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">27</span>
+</pre></div>
+</div>
+<p>在这个例子中，
+排序结构并未完全被指定，
+因此 San Francisco 的两个行可能会以不同的顺序被返回。
+但通过执行以下语句，
+我们可以让查询结果总是以相同的顺序返回：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">weather</span>
+    <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">city</span><span class="p">,</span> <span class="n">temp_lo</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>通过执行以下查询，
+我们可以移除查询结果中重复出现的行：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">city</span>
+    <span class="k">FROM</span> <span class="n">weather</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>执行上面这个语句将得到以下结果：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre>    <span class="n">city</span>
+<span class="c1">---------------</span>
+<span class="n">Hayward</span>
+<span class="n">San</span> <span class="n">Francisco</span>
+<span class="p">(</span><span class="mf">2</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>跟前面的情况类似，
+上面的语句产生的结果可能会以不同的顺序被返回。
+但通过同时使用 <code class="docutils literal"><span class="pre">DISTINCT</span></code> 和 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> ，
+我们可以确保查询结果总是有序的、并且不会出现重复的结果：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="n">city</span>
+    <span class="k">FROM</span> <span class="n">weather</span>
+        <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">city</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id6">
+<h2>连接多个表格<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h2>
+<p>到目前为止，
+本章展示的所有查询每次都只会访问一个表格。
+但实际上，
+查询既可以在同一时间里面访问多个表格，
+又可以在同一时间里面，
+对同一个表格中的多个行进行处理。
+这种在同一时间里面访问相同或者不同表格中的多个行的查询被称为<em>连接</em>查询。</p>
+<p>举个例子，
+假设我们想要在获取所有天气记录的同时，
+将这些记录相关联的城市的地理位置也一并返回。
+为了做到这一点，
+我们需要将 <code class="docutils literal"><span class="pre">weather</span></code> 表格中每个行的 <code class="docutils literal"><span class="pre">city</span></code> 一列的值与 <code class="docutils literal"><span class="pre">cities</span></code> 表格中每个行的 <code class="docutils literal"><span class="pre">name</span></code> 一列的值进行比较，
+并从这两个表格里面选出哪些比较结果相同的配对行（pairs of rows）。</p>
+<div class="admonition note">
+<p class="first admonition-title">注解</p>
+<p class="last">上面描述的只是一个概念模型。
+比起一个接一个地对比每个可能被配对的行，
+连接通常会以一种更为高效的方式执行，
+不过这对于用户来说是不可见的（invisible）。</p>
+</div>
+<p>以下查询可以将天气记录和相关城市的地理位置一并返回：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="o">*</span>
+    <span class="k">FROM</span> <span class="n">weather</span><span class="p">,</span> <span class="n">cities</span>
+        <span class="k">WHERE</span> <span class="n">city</span> <span class="o">=</span> <span class="k">name</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre>     <span class="n">city</span>      <span class="o">|</span> <span class="n">temp_lo</span> <span class="o">|</span> <span class="n">temp_hi</span> <span class="o">|</span> <span class="n">prcp</span> <span class="o">|</span>    <span class="nb">date</span>    <span class="o">|</span>     <span class="k">name</span>      <span class="o">|</span> <span class="k">location</span>
+<span class="c1">---------------+---------+---------+------+------------+---------------+-----------</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">46</span> <span class="o">|</span>      <span class="mf">50</span> <span class="o">|</span> <span class="mf">0.25</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">27</span> <span class="o">|</span> <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span> <span class="p">(</span><span class="o">-</span><span class="mf">194</span><span class="p">,</span><span class="mf">53</span><span class="p">)</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">43</span> <span class="o">|</span>      <span class="mf">57</span> <span class="o">|</span>    <span class="mf">0</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span> <span class="o">|</span> <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span> <span class="p">(</span><span class="o">-</span><span class="mf">194</span><span class="p">,</span><span class="mf">53</span><span class="p">)</span>
+<span class="p">(</span><span class="mf">2</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>查询的执行结果里面有两个需要注意的地方：</p>
+<ul class="simple">
+<li>查询结果里面并未包含与 Hayward 城市有关的信息。
+这是因为 <code class="docutils literal"><span class="pre">cities</span></code> 表格里面并没有记载 Hayward 城市的地理位置，
+所以连接操作就略去了 <code class="docutils literal"><span class="pre">weather</span></code> 表格中关于 Hayward 城市的未匹配行。
+我们稍后就会看到解决这个问题的方法。</li>
+</ul>
+<ul>
+<li><p class="first">结果里面有两个列包含了城市的名字，
+这是因为我们将 <code class="docutils literal"><span class="pre">weather</span></code> 表格和 <code class="docutils literal"><span class="pre">cities</span></code> 表格包含的所有列都连接在了一起。
+虽然这种行为是正确的，
+但我们实际上并不想将城市名显示两次，
+为此，
+我们可以直接在查询语句的选择列表里面显式地列出所有想要返回的列，
+而不再使用 <code class="docutils literal"><span class="pre">*</span></code> ：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">city</span><span class="p">,</span> <span class="n">temp_lo</span><span class="p">,</span> <span class="n">temp_hi</span><span class="p">,</span> <span class="n">prcp</span><span class="p">,</span> <span class="nb">date</span><span class="p">,</span> <span class="k">location</span>
+    <span class="k">FROM</span> <span class="n">weather</span><span class="p">,</span> <span class="n">cities</span>
+        <span class="k">WHERE</span> <span class="n">city</span> <span class="o">=</span> <span class="k">name</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p><strong>练习：</strong>思考一下，如果去掉上面的查询语句中的 <code class="docutils literal"><span class="pre">WHERE</span></code> 子句，查询的结果将会变成怎样？</p>
+<p>因为 <code class="docutils literal"><span class="pre">weather</span></code> 表格和 <code class="docutils literal"><span class="pre">cities</span></code> 表格的列都有不同的名字，
+所以语法分析器会自动地判断查询语句中的各个列分别属于哪个表格。
+但是，
+如果两个表格里面包含有相同的列名，
+那么用户在输入查询语句的时候，
+就需要在列名的前面加上具体的表格名，
+以此来说明自己想要使用的是哪个列：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">weather</span><span class="mf">.</span><span class="n">city</span><span class="p">,</span> <span class="n">weather</span><span class="mf">.</span><span class="n">temp_lo</span><span class="p">,</span> <span class="n">weather</span><span class="mf">.</span><span class="n">temp_hi</span><span class="p">,</span>
+       <span class="n">weather</span><span class="mf">.</span><span class="n">prcp</span><span class="p">,</span> <span class="n">weather</span><span class="mf">.</span><span class="nb">date</span><span class="p">,</span> <span class="n">cities</span><span class="mf">.</span><span class="k">location</span>
+    <span class="k">FROM</span> <span class="n">weather</span><span class="p">,</span> <span class="n">cities</span>
+    <span class="k">WHERE</span> <span class="n">cities</span><span class="mf">.</span><span class="k">name</span> <span class="o">=</span> <span class="n">weather</span><span class="mf">.</span><span class="n">city</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>在执行连接查询的时候显式地标识各个列所属的表格通常被认为是一种良好的风格，
+因为这种做法即使在多个表格拥有相同列名的时候也可以正确地执行。</p>
+<p>目前展示过的连接查询也可以改写为以下这种形式：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="o">*</span>
+    <span class="k">FROM</span> <span class="n">weather</span> <span class="k">INNER</span> <span class="k">JOIN</span> <span class="n">cities</span> <span class="k">ON</span> <span class="p">(</span><span class="n">weather</span><span class="mf">.</span><span class="n">city</span> <span class="o">=</span> <span class="n">cities</span><span class="mf">.</span><span class="k">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>这种语法并没有前一种语法常见，
+但展示这种语法有助于我们理解接下来要介绍的内容。</p>
+<p>现在让我们来考虑一下，
+如何才能让 Hayward 的天气记录出现在查询结果里面。
+我们想要让查询去扫描 <code class="docutils literal"><span class="pre">weather</span></code> 表格的每个行，
+并寻找其中与 <code class="docutils literal"><span class="pre">cities</span></code> 城市相匹配的行，
+并在没有找到相匹配的行时，
+使用一些“空值”（empty value）去代替 <code class="docutils literal"><span class="pre">cities</span></code> 表格中的列。
+这种查询被称为<em>外连接</em>（outer join），
+而本节前面展示的连接则为<em>内连接</em>（inner join）。
+以下查询可以实现上述的要求：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="o">*</span>
+    <span class="k">FROM</span> <span class="n">weather</span> <span class="k">LEFT</span> <span class="k">OUTER</span> <span class="k">JOIN</span> <span class="n">cities</span> <span class="k">ON</span> <span class="p">(</span><span class="n">weather</span><span class="mf">.</span><span class="n">city</span> <span class="o">=</span> <span class="n">cities</span><span class="mf">.</span><span class="k">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre>     <span class="n">city</span>      <span class="o">|</span> <span class="n">temp_lo</span> <span class="o">|</span> <span class="n">temp_hi</span> <span class="o">|</span> <span class="n">prcp</span> <span class="o">|</span>    <span class="nb">date</span>    <span class="o">|</span>     <span class="k">name</span>      <span class="o">|</span> <span class="k">location</span>
+<span class="c1">---------------+---------+---------+------+------------+---------------+-----------</span>
+ <span class="n">Hayward</span>       <span class="o">|</span>      <span class="mf">37</span> <span class="o">|</span>      <span class="mf">54</span> <span class="o">|</span>      <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span> <span class="o">|</span>               <span class="o">|</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">46</span> <span class="o">|</span>      <span class="mf">50</span> <span class="o">|</span> <span class="mf">0.25</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">27</span> <span class="o">|</span> <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span> <span class="p">(</span><span class="o">-</span><span class="mf">194</span><span class="p">,</span><span class="mf">53</span><span class="p">)</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">43</span> <span class="o">|</span>      <span class="mf">57</span> <span class="o">|</span>    <span class="mf">0</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span> <span class="o">|</span> <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span> <span class="p">(</span><span class="o">-</span><span class="mf">194</span><span class="p">,</span><span class="mf">53</span><span class="p">)</span>
+<span class="p">(</span><span class="mf">3</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>上面的这个查询被称为<em>左外连接</em>（left outer join），
+因为位于连接操作符左边的表格的每个行至少会在查询结果里面出现一次，
+而位于连接操作符右边的表格的行只会在它与左边表格中的某个行相匹配时出现。
+在返回一个来自于左边表格的行时，
+如果那个行在右边表格里面没有与之相匹配的行，
+那么空缺的那个右边表格的列就会用空值（null）代替。</p>
+<p><strong>练习：</strong>除了左外连接之外，还有右外连接（right outer join）和全外连接（full outer join），请尝试执行这些连接。</p>
+<p>除了以上提到的连接方式之外，
+用户还可以将一个表格与它自身进行连接，
+这种连接被称为<em>自连接</em>（self join）。</p>
+<p>作为例子，
+假设我们想要根据某个指定的天气记录的温度区间，
+找出位于这个温度区间内的所有天气记录，
+那么我们就需要将 <code class="docutils literal"><span class="pre">weather</span></code> 表格中某个指定行的 <code class="docutils literal"><span class="pre">temp_lo</span></code> 一列和 <code class="docutils literal"><span class="pre">temp_hi</span></code> 一列，
+与 <code class="docutils literal"><span class="pre">weather</span></code> 表格中每个行的 <code class="docutils literal"><span class="pre">temp_lo</span></code> 一列和 <code class="docutils literal"><span class="pre">temp_hi</span></code> 一列进行对比。
+具体的查询语句如下：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">W1</span><span class="mf">.</span><span class="n">city</span><span class="p">,</span> <span class="n">W1</span><span class="mf">.</span><span class="n">temp_lo</span> <span class="k">AS</span> <span class="n">low</span><span class="p">,</span> <span class="n">W1</span><span class="mf">.</span><span class="n">temp_hi</span> <span class="k">AS</span> <span class="n">high</span><span class="p">,</span>
+    <span class="n">W2</span><span class="mf">.</span><span class="n">city</span><span class="p">,</span> <span class="n">W2</span><span class="mf">.</span><span class="n">temp_lo</span> <span class="k">AS</span> <span class="n">low</span><span class="p">,</span> <span class="n">W2</span><span class="mf">.</span><span class="n">temp_hi</span> <span class="k">AS</span> <span class="n">high</span>
+    <span class="k">FROM</span> <span class="n">weather</span> <span class="n">W1</span><span class="p">,</span> <span class="n">weather</span> <span class="n">W2</span>
+    <span class="k">WHERE</span> <span class="n">W1</span><span class="mf">.</span><span class="n">temp_lo</span> <span class="o">&lt;</span> <span class="n">W2</span><span class="mf">.</span><span class="n">temp_lo</span>
+    <span class="k">AND</span> <span class="n">W1</span><span class="mf">.</span><span class="n">temp_hi</span> <span class="o">&gt;</span> <span class="n">W2</span><span class="mf">.</span><span class="n">temp_hi</span><span class="p">;</span>
+
+     <span class="n">city</span>      <span class="o">|</span> <span class="n">low</span> <span class="o">|</span> <span class="n">high</span> <span class="o">|</span>     <span class="n">city</span>      <span class="o">|</span> <span class="n">low</span> <span class="o">|</span> <span class="n">high</span>
+<span class="c1">---------------+-----+------+---------------+-----+------</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>  <span class="mf">43</span> <span class="o">|</span>   <span class="mf">57</span> <span class="o">|</span> <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>  <span class="mf">46</span> <span class="o">|</span>   <span class="mf">50</span>
+ <span class="n">Hayward</span>       <span class="o">|</span>  <span class="mf">37</span> <span class="o">|</span>   <span class="mf">54</span> <span class="o">|</span> <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>  <span class="mf">46</span> <span class="o">|</span>   <span class="mf">50</span>
+<span class="p">(</span><span class="mf">2</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>为了区分位于连接操作左边的表格和右边的表格，
+上面的查询将 <code class="docutils literal"><span class="pre">weather</span></code> 表格重新命名为了 <code class="docutils literal"><span class="pre">W1</span></code> 和 <code class="docutils literal"><span class="pre">W2</span></code> 。
+用户在执行其他查询的时候，
+也可以通过这种方法去减少需要输入的字符，
+比如这样：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="o">*</span>
+    <span class="k">FROM</span> <span class="n">weather</span> <span class="n">w</span><span class="p">,</span> <span class="n">cities</span> <span class="n">c</span>
+        <span class="k">WHERE</span> <span class="n">w</span><span class="mf">.</span><span class="n">city</span> <span class="o">=</span> <span class="n">c</span><span class="mf">.</span><span class="k">name</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>我们将会经常看到这种类型的简化。</p>
+</div>
+<div class="section" id="id7">
+<h2>聚合函数<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h2>
+<p>跟其他很多关系式数据库产品一样，
+PostgreSQL 也支持<em>聚合函数</em>（aggregate functions）。
+一个聚合函数可以从多个输入行里面计算出单个结果。
+比如说，
+我们可以使用 <code class="docutils literal"><span class="pre">count</span></code> 、 <code class="docutils literal"><span class="pre">sum</span></code> 、 <code class="docutils literal"><span class="pre">avg</span></code> （average，平均值）、 <code class="docutils literal"><span class="pre">max</span></code> （maximum，最大值）、和 <code class="docutils literal"><span class="pre">min</span></code> （minimum，最小值）等聚合函数去对一系列行进行聚合计算。</p>
+<p>作为例子，
+我们可以使用以下语句，
+从 <code class="docutils literal"><span class="pre">weather</span></code> 表格中找出最低温度的最大值：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">max</span><span class="p">(</span><span class="n">temp_lo</span><span class="p">)</span> <span class="k">FROM</span> <span class="n">weather</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre> <span class="n">max</span>
+<span class="c1">-----</span>
+  <span class="mf">46</span>
+<span class="p">(</span><span class="mf">1</span> <span class="k">row</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>如果我们想要知道这个最低温度的最大值出现在哪个城市，
+那么可能会尝试执行以下查询：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">city</span> <span class="k">FROM</span> <span class="n">weather</span> <span class="k">WHERE</span> <span class="n">temp_lo</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">temp_lo</span><span class="p">);</span>     <span class="n">WRONG</span>
+</pre></div>
+</div>
+<p>但这个查询语句并不可行，
+因为像 <code class="docutils literal"><span class="pre">max</span></code> 这样的聚合函数是不可以用在 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句里面的。
+（这个限制之所以会存在，
+是因为 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句需要决定哪些行会被包含在聚合计算当中，
+这导致它必须在执行聚合计算之前进行求值，
+所以聚合计算函数是没办法在 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句里面使用的。）
+不过，
+通过使用<em>子查询</em>（subquery），
+我们通常还是可以藉由多执行一次查询来获得想要的结果：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">city</span> <span class="k">FROM</span> <span class="n">weather</span>
+    <span class="k">WHERE</span> <span class="n">temp_lo</span> <span class="o">=</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">max</span><span class="p">(</span><span class="n">temp_lo</span><span class="p">)</span> <span class="k">FROM</span> <span class="n">weather</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre>     <span class="n">city</span>
+<span class="c1">---------------</span>
+ <span class="n">San</span> <span class="n">Francisco</span>
+<span class="p">(</span><span class="mf">1</span> <span class="k">row</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>这个查询之所以能够正确地执行，
+是因为位于查询内部的子查询是一个独立的计算过程，
+它可以独立地计算自己的聚合结果，
+而不会受到外部查询的影响。</p>
+<p>聚合函数与 <code class="docutils literal"><span class="pre">GROUP</span> <span class="pre">BY</span></code> 语句组合起来使用也是非常有用的。
+举个例子，
+通过执行以下查询，
+我们可以找出各个城市观测到的最低温度的最大值：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">city</span><span class="p">,</span> <span class="n">max</span><span class="p">(</span><span class="n">temp_lo</span><span class="p">)</span>
+    <span class="k">FROM</span> <span class="n">weather</span>
+    <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">city</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre>     <span class="n">city</span>      <span class="o">|</span> <span class="n">max</span>
+<span class="c1">---------------+-----</span>
+ <span class="n">Hayward</span>       <span class="o">|</span>  <span class="mf">37</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>  <span class="mf">46</span>
+<span class="p">(</span><span class="mf">2</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>上面的语句将为每个城市分别返回一个结果行，
+这些结果行都是通过对表格里面与城市相匹配的行进行聚合计算得出的。
+通过使用 <code class="docutils literal"><span class="pre">HAVING</span></code> ，
+我们可以对分组后的行进行过滤：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">city</span><span class="p">,</span> <span class="n">max</span><span class="p">(</span><span class="n">temp_lo</span><span class="p">)</span>
+    <span class="k">FROM</span> <span class="n">weather</span>
+    <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">city</span>
+    <span class="k">HAVING</span> <span class="n">max</span><span class="p">(</span><span class="n">temp_lo</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">40</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre>  <span class="n">city</span>   <span class="o">|</span> <span class="n">max</span>
+<span class="c1">---------+-----</span>
+ <span class="n">Hayward</span> <span class="o">|</span>  <span class="mf">37</span>
+<span class="p">(</span><span class="mf">1</span> <span class="k">row</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>这个查询会同样会返回城市最低温度的最大值，
+但是只会返回那些最低温度低于 40 度的结果。
+最后，
+如果我们只关心名字以 <code class="docutils literal"><span class="pre">&quot;S&quot;</span></code> 开头的城市的最低温度的最大值，
+那么可以执行以下查询：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">city</span><span class="p">,</span> <span class="n">max</span><span class="p">(</span><span class="n">temp_lo</span><span class="p">)</span>
+    <span class="k">FROM</span> <span class="n">weather</span>
+    <span class="k">WHERE</span> <span class="n">city</span> <span class="k">LIKE</span> <span class="s1">&#39;S%&#39;</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span>
+    <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">city</span>
+    <span class="k">HAVING</span> <span class="n">max</span><span class="p">(</span><span class="n">temp_lo</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">40</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">注解</p>
+<p class="last">查询中的 <code class="docutils literal"><span class="pre">LIKE</span></code> 操作用于执行模式匹配，
+关于这个操作的详细信息请看本文档的<a class="reference external" href="http://www.postgresql.org/docs/9.5/static/functions-matching.html">第 9.7 节</a>。</p>
+</div>
+<p>了解聚合函数与 SQL 的 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句以及 <code class="docutils literal"><span class="pre">HAVING</span></code> 语句之间的互动行为是非常重要的。
+<code class="docutils literal"><span class="pre">WHERE</span></code> 和 <code class="docutils literal"><span class="pre">HAVING</span></code> 的主要区别在于：
+<code class="docutils literal"><span class="pre">WHERE</span></code> 用于在进行分组和聚合计算之前选择输入的列
+（因此 <code class="docutils literal"><span class="pre">WHERE</span></code> 控制了哪些列会被进行聚合计算），
+而 <code class="docutils literal"><span class="pre">HAVING</span></code> 则用于在分组完毕和聚合计算进行完毕之后，
+选择已经分好了组的行。</p>
+<p>因为上述原因，
+<code class="docutils literal"><span class="pre">WHERE</span></code> 语句不能包含任意聚合函数；
+尝试使用一个聚合函数去判断哪些行能够成为聚合函数的输入是没有意义的。
+另一方面，
+<code class="docutils literal"><span class="pre">HAVING</span></code> 语句总是包含着聚合函数。
+（严格来说，
+用户还是可以编写一个不包含任何聚合函数的 <code class="docutils literal"><span class="pre">HAVING</span></code> 语句，
+只是这种语句很少会有用，
+因为相同的条件在 <code class="docutils literal"><span class="pre">WHERE</span></code> 阶段可以更高效地执行。）</p>
+<p>在前面的例子中，
+因为城市的名字并不需要进行聚合计算，
+所以我们可以使用 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句去对城市的名字进行限制。
+并且由于这种做法不需要对那些不能通过 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句检查的行进行分组和聚合计算，
+所以它的效率比使用 <code class="docutils literal"><span class="pre">HAVING</span></code> 语句去进行限制要高效得多。</p>
+</div>
+<div class="section" id="id9">
+<h2>更新<a class="headerlink" href="#id9" title="永久链接至标题">¶</a></h2>
+<p>用户可以通过 <code class="docutils literal"><span class="pre">UPDATE</span></code> 命令对已存在的行进行更新。
+假设你想将 11 月 28 日之后的所有天气记录的温度都降低 2 度，
+那么可以执行以下语句：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">UPDATE</span> <span class="n">weather</span>
+    <span class="k">SET</span> <span class="n">temp_hi</span> <span class="o">=</span> <span class="n">temp_hi</span> <span class="o">-</span> <span class="mf">2</span><span class="p">,</span>  <span class="n">temp_lo</span> <span class="o">=</span> <span class="n">temp_lo</span> <span class="o">-</span> <span class="mf">2</span>
+    <span class="k">WHERE</span> <span class="nb">date</span> <span class="o">&gt;</span> <span class="s1">&#39;1994-11-28&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>以下展示的是更新之后的数据：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">weather</span><span class="p">;</span>
+
+     <span class="n">city</span>      <span class="o">|</span> <span class="n">temp_lo</span> <span class="o">|</span> <span class="n">temp_hi</span> <span class="o">|</span> <span class="n">prcp</span> <span class="o">|</span>    <span class="nb">date</span>
+<span class="c1">---------------+---------+---------+------+------------</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">46</span> <span class="o">|</span>      <span class="mf">50</span> <span class="o">|</span> <span class="mf">0.25</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">27</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">41</span> <span class="o">|</span>      <span class="mf">55</span> <span class="o">|</span>    <span class="mf">0</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span>
+ <span class="n">Hayward</span>       <span class="o">|</span>      <span class="mf">35</span> <span class="o">|</span>      <span class="mf">52</span> <span class="o">|</span>      <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span>
+<span class="p">(</span><span class="mf">3</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id10">
+<h2>删除<a class="headerlink" href="#id10" title="永久链接至标题">¶</a></h2>
+<p>通过使用 <code class="docutils literal"><span class="pre">DELETE</span></code> 命令，
+用户可以从表格里面移除指定的行。
+假设我们不再对 Hayward 城市的天气记录感兴趣了，
+那么可以通过执行以下命令来移除 Hayward 城市的所有天气记录：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">DELETE</span> <span class="k">FROM</span> <span class="n">weather</span> <span class="k">WHERE</span> <span class="n">city</span> <span class="o">=</span> <span class="s1">&#39;Hayward&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>这样 Hayward 城市的所有天气记录将被删除。</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">weather</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre>     <span class="n">city</span>      <span class="o">|</span> <span class="n">temp_lo</span> <span class="o">|</span> <span class="n">temp_hi</span> <span class="o">|</span> <span class="n">prcp</span> <span class="o">|</span>    <span class="nb">date</span>
+<span class="c1">---------------+---------+---------+------+------------</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">46</span> <span class="o">|</span>      <span class="mf">50</span> <span class="o">|</span> <span class="mf">0.25</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">27</span>
+ <span class="n">San</span> <span class="n">Francisco</span> <span class="o">|</span>      <span class="mf">41</span> <span class="o">|</span>      <span class="mf">55</span> <span class="o">|</span>    <span class="mf">0</span> <span class="o">|</span> <span class="mf">1994</span><span class="o">-</span><span class="mf">11</span><span class="o">-</span><span class="mf">29</span>
+<span class="p">(</span><span class="mf">2</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>需要注意的是，
+如果用户在执行 <code class="docutils literal"><span class="pre">DELETE</span></code> 命令的时候，
+没有给定删除的条件：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">DELETE</span> <span class="k">FROM</span> <span class="n">tablename</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>那么 <code class="docutils literal"><span class="pre">DELETE</span></code> 将移除表格中的所有行，
+使得表格变为空，
+并且系统在执行这个操作的时候将不会要求你进行确认，
+所以千万要小心！</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             >索引</a></li>
+        <li class="right" >
+          <a href="advanced-features.html" title="高级特性"
+             >下一页</a> |</li>
+        <li class="right" >
+          <a href="getting-started.html" title="入门须知"
+             >上一页</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PostgreSQL 数据库文档</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; 版权所有 2015, 黄健宏.
+      由 <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1 创建。
+    </div>
+  </body>
+</html>

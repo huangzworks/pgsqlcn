@@ -1,0 +1,150 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PostgreSQL 简介 &mdash; PostgreSQL 数据库文档</title>
+    
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '9.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/translations.js"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="top" title="PostgreSQL 数据库文档" href="../index.html" />
+    <link rel="next" title="入门须知" href="../tutorial/getting-started.html" />
+    <link rel="prev" title="PostgreSQL 数据库文档" href="../index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../tutorial/getting-started.html" title="入门须知"
+             accesskey="N">下一页</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="PostgreSQL 数据库文档"
+             accesskey="P">上一页</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PostgreSQL 数据库文档</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="../index.html"
+                        title="上一章">PostgreSQL 数据库文档</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="../tutorial/getting-started.html"
+                        title="下一章">入门须知</a></p>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/preface/what-is-postgresql.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的术语，模块，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="postgresql">
+<h1>PostgreSQL 简介<a class="headerlink" href="#postgresql" title="永久链接至标题">¶</a></h1>
+<p>PostgreSQL 是一个对象关系数据库管理系统（object-relational DBMS），
+它最初是基于加利福利亚州 Berkeley 大学计算机分部开发的 POSTGRES 系统的 4.2 版本进行开发的。
+POSTGRES 率先开创了许多概念，
+这些概念直到很久之后才出现在了某些商业数据库系统里面。</p>
+<p>PostgreSQL 是原有的 Berkeley 代码的一个开源后继者，
+它支持大部分 SQL 标准，
+并提供了很多现代化的特性：</p>
+<ul class="simple">
+<li>复杂的查询语句</li>
+<li>外部键（foreign keys）</li>
+<li>触发器（triggers）</li>
+<li>可更新的视图（views）</li>
+<li>完整的事务支持</li>
+<li>多版本并发控制（multiversion concurrency control，MVCC）</li>
+</ul>
+<p>除此之外，
+用户还可以通过多种不同的方式对 PostgreSQL 进行扩展。
+比如说，
+用户可以添加新的……：</p>
+<ul class="simple">
+<li>数据类型</li>
+<li>函数</li>
+<li>操作符（operators）</li>
+<li>聚合函数（aggregate functions）</li>
+<li>索引方法（index methods）</li>
+<li>过程式语言（procedural languages）</li>
+</ul>
+<p>并且根据 PostgreSQL 的自由许可证（liberal license），
+用户可以以任何目的，
+免费地在私有、商业或者学术领域，
+使用、修改或者分发 PostgreSQL 。</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../tutorial/getting-started.html" title="入门须知"
+             >下一页</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="PostgreSQL 数据库文档"
+             >上一页</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PostgreSQL 数据库文档</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; 版权所有 2015, 黄健宏.
+      由 <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1 创建。
+    </div>
+  </body>
+</html>

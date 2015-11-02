@@ -1,0 +1,666 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>高级特性 &mdash; PostgreSQL 数据库文档</title>
+    
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '9.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/translations.js"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="top" title="PostgreSQL 数据库文档" href="../index.html" />
+    <link rel="prev" title="SQL 语言简介" href="the-sql-language.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="the-sql-language.html" title="SQL 语言简介"
+             accesskey="P">上一页</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PostgreSQL 数据库文档</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">高级特性</a><ul>
+<li><a class="reference internal" href="#id2">引言</a></li>
+<li><a class="reference internal" href="#view">视图（view）</a></li>
+<li><a class="reference internal" href="#foreign-key">外键（foreign key）</a></li>
+<li><a class="reference internal" href="#id3">事务</a></li>
+<li><a class="reference internal" href="#window-function">窗口函数（window function）</a></li>
+<li><a class="reference internal" href="#id7">继承</a></li>
+<li><a class="reference internal" href="#id8">结语</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="the-sql-language.html"
+                        title="上一章">SQL 语言简介</a></p>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/tutorial/advanced-features.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的术语，模块，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="id1">
+<h1>高级特性<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<div class="section" id="id2">
+<h2>引言<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>前面的章节介绍了如何使用基本的 SQL 语句去储存和访问 PostgreSQL 中的数据。
+本章将对 SQL 的一些高级特性进行介绍，
+这些特性可以简化用户对数据的管理操作，
+并防止数据出现丢失或者错误。</p>
+<p>本章偶尔会用到一些在本文档第 2 章中介绍过的例子，
+并对它们进行修改，
+又或者改进它们，
+所以读者最好已经阅读过本文档的第 2 章了。</p>
+<p>本章用到的某些例子也可以在 <code class="docutils literal"><span class="pre">tutorial</span></code> 文件夹中的 <code class="docutils literal"><span class="pre">advanced.sql</span></code> 文件里面找到。
+除此之外，
+<code class="docutils literal"><span class="pre">advanced.sql</span></code> 文件还包含了一些示例数据，
+读者可以通过载入这个文件来直接使用这些数据，
+因此本章将不再展示输入这些数据的过程。
+（文件的载入方法可以在本文档的 2.1 节看到。）</p>
+</div>
+<div class="section" id="view">
+<h2>视图（view）<a class="headerlink" href="#view" title="永久链接至标题">¶</a></h2>
+<p>让我们重新回顾本文档 2.6 节提到过的例子。
+假设对于程序来说，
+同时列出天气记录以及相关联的地理位置是一个特别重要的操作，
+但你可能并不想在每次用到这个操作的时候都重新输入整个查询语句，
+这时你就可以为那个查询创建一个<em>视图</em>。
+视图允许用户为一个查询关联一个名字，
+并通过给定名字来引用与之相关联的查询，
+就像这样：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">CREATE</span> <span class="k">VIEW</span> <span class="n">myview</span> <span class="k">AS</span>
+    <span class="k">SELECT</span> <span class="n">city</span><span class="p">,</span> <span class="n">temp_lo</span><span class="p">,</span> <span class="n">temp_hi</span><span class="p">,</span> <span class="n">prcp</span><span class="p">,</span> <span class="nb">date</span><span class="p">,</span> <span class="k">location</span>
+        <span class="k">FROM</span> <span class="n">weather</span><span class="p">,</span> <span class="n">cities</span>
+        <span class="k">WHERE</span> <span class="n">city</span> <span class="o">=</span> <span class="k">name</span><span class="p">;</span>
+
+<span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">myview</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>大量使用视图是优秀的 SQL 数据库设计的关键部分。
+视图允许用户将表格结构的相关细节隐藏起来，
+使得应用程序即使在不断演进而导致表格结构不断变更的情况下，
+仍然能够提供始终如一的接口。</p>
+<p>几乎所有可以使用表格地方，
+都可以使用视图去代替表格。
+基于其他视图去构建新视图的做法并不少见。</p>
+</div>
+<div class="section" id="foreign-key">
+<h2>外键（foreign key）<a class="headerlink" href="#foreign-key" title="永久链接至标题">¶</a></h2>
+<p>回忆一下本文档第 2 章介绍过的 <code class="docutils literal"><span class="pre">weather</span></code> 表格和 <code class="docutils literal"><span class="pre">cities</span></code> 表格。
+假设我们现在想要保证，
+在将一个新行插入到 <code class="docutils literal"><span class="pre">weather</span></code> 表格的时候，
+这个新行中提到的城市必须已经存在于 <code class="docutils literal"><span class="pre">cities</span></code> 表格，
+这种机制通常被称为“数据的引用完整性管理机制”。
+在一个非常简单的数据库系统中，
+引用完整性可以通过以下方法来确保：
+在尝试向 <code class="docutils literal"><span class="pre">weather</span></code> 表格插入新记录之前，
+先在 <code class="docutils literal"><span class="pre">cities</span></code> 表格里面进行查找，
+检查是否存在匹配的城市记录，
+然后再决定是否将新的记录插入到 <code class="docutils literal"><span class="pre">weather</span></code> 表格里面。
+这种简单的实现方法有非常多的问题，
+并且这种方法也无法满足数据的一致性要求，
+因此 PostgreSQL 选择了提供内置的引用完整性管理机制，
+这种机制就是外键。</p>
+<p>在定义了外键之后，
+表格的新定义如下：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">cities</span> <span class="p">(</span>
+        <span class="n">city</span>     <span class="nb">varchar</span><span class="p">(</span><span class="mf">80</span><span class="p">)</span> <span class="k">primary</span> <span class="k">key</span><span class="p">,</span>
+        <span class="k">location</span> <span class="nb">point</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">weather</span> <span class="p">(</span>
+        <span class="n">city</span>      <span class="nb">varchar</span><span class="p">(</span><span class="mf">80</span><span class="p">)</span> <span class="k">references</span> <span class="n">cities</span><span class="p">(</span><span class="n">city</span><span class="p">),</span>
+        <span class="n">temp_lo</span>   <span class="nb">int</span><span class="p">,</span>
+        <span class="n">temp_hi</span>   <span class="nb">int</span><span class="p">,</span>
+        <span class="n">prcp</span>      <span class="nb">real</span><span class="p">,</span>
+        <span class="nb">date</span>      <span class="nb">date</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<p>现在，
+尝试插入一条不合法的记录将引发一个错误：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="n">weather</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;Berkeley&#39;</span><span class="p">,</span> <span class="mf">45</span><span class="p">,</span> <span class="mf">53</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;1994-11-28&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="n">ERROR</span><span class="p">:</span>  <span class="k">insert</span> <span class="k">or</span> <span class="k">update</span> <span class="k">on</span> <span class="k">table</span> <span class="s-Name">&quot;weather&quot;</span> <span class="n">violates</span> <span class="k">foreign</span> <span class="k">key</span> <span class="k">constraint</span> <span class="s-Name">&quot;weather_city_fkey&quot;</span>
+<span class="n">DETAIL</span><span class="p">:</span>  <span class="k">Key</span> <span class="p">(</span><span class="n">city</span><span class="p">)</span><span class="o">=</span><span class="p">(</span><span class="n">Berkeley</span><span class="p">)</span> <span class="k">is</span> <span class="k">not</span> <span class="n">present</span> <span class="k">in</span> <span class="k">table</span> <span class="s-Name">&quot;cities&quot;</span><span class="mf">.</span>
+</pre></div>
+</div>
+<p>外键的行为可以很好地集成到应用程序里面。
+除了这个简单的示例以外，
+这个教程并不会介绍更多关于外键的信息，
+但这些信息可以在本文档的第 5 章找到。
+正确地使用外键可以有效地提升数据库程序的质量，
+因此读者应该仔细地学习与外键有关的知识。</p>
+</div>
+<div class="section" id="id3">
+<h2>事务<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<p><em>事务</em>是所有数据库系统的一个基本概念。
+事务本质上就是将多个步骤绑定为一个操作，
+这个操作要么就执行所有被绑定的步骤，
+要么就一个步骤都不执行。
+各个步骤之间的中间状态对于其他并发事务是不可见的，
+如果事务中的某个步骤在执行时出现了错误，
+导致事务无法完成，
+那么所有步骤的效果都会被撤销。</p>
+<p>举个例子，
+假设一个银行数据库保存着各个客户账号的余额，
+并为每个分行都设置了一个总存款余额。
+如果我们想要将爱丽丝账号上的 $100.00 转移到鲍勃的账号，
+那么一个简陋的程序可能会执行以下 SQL 命令：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">UPDATE</span> <span class="n">accounts</span> <span class="k">SET</span> <span class="n">balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="o">-</span> <span class="mf">100.00</span>
+    <span class="k">WHERE</span> <span class="k">name</span> <span class="o">=</span> <span class="s1">&#39;Alice&#39;</span><span class="p">;</span>
+
+<span class="k">UPDATE</span> <span class="n">branches</span> <span class="k">SET</span> <span class="n">balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="o">-</span> <span class="mf">100.00</span>
+    <span class="k">WHERE</span> <span class="k">name</span> <span class="o">=</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">branch_name</span> <span class="k">FROM</span> <span class="n">accounts</span> <span class="k">WHERE</span> <span class="k">name</span> <span class="o">=</span> <span class="s1">&#39;Alice&#39;</span><span class="p">);</span>
+
+<span class="k">UPDATE</span> <span class="n">accounts</span> <span class="k">SET</span> <span class="n">balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="o">+</span> <span class="mf">100.00</span>
+    <span class="k">WHERE</span> <span class="k">name</span> <span class="o">=</span> <span class="s1">&#39;Bob&#39;</span><span class="p">;</span>
+
+<span class="k">UPDATE</span> <span class="n">branches</span> <span class="k">SET</span> <span class="n">balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="o">+</span> <span class="mf">100.00</span>
+    <span class="k">WHERE</span> <span class="k">name</span> <span class="o">=</span> <span class="p">(</span><span class="k">SELECT</span> <span class="n">branch_name</span> <span class="k">FROM</span> <span class="n">accounts</span> <span class="k">WHERE</span> <span class="k">name</span> <span class="o">=</span> <span class="s1">&#39;Bob&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>这些命令的细节并不重要，
+重要的是，
+要完成这个简单的转账操作，
+程序需要进行好几个独立的更新。
+银行的程序员需要保证这些更新要么全都都发生，
+要么就一个都不发生。
+即使系统出现故障，
+也绝不能发生鲍勃收到了 $100.00 ，
+但是爱丽丝的转账并没有成功的事情；
+也不能发生爱丽丝已经转账了，
+但是鲍勃没有收到钱的事情。
+系统必须保证，
+如果在操作执行的过程中，
+有某个地方出错了，
+那么已执行的所有步骤的效果都会被撤销。
+通过将多个更新打包为一个事务可以获得以上所需的保证：
+事务的<em>原子性</em>可以保证事务包含的所有操作要么全部都执行，
+要么就一个都不执行。</p>
+<p>我们还想要保证，
+一旦事务完成并且得到了数据库系统的确认，
+它将成为永久性的记录，
+即使系统在事务完成之后崩溃，
+事务的效果也不会丢失。
+举个例子，
+如果鲍勃刚刚在银行完成了一次提款操作，
+那么我们希望，
+即使系统在执行完提款操作之后崩溃，
+鲍勃的提款记录也不会丢失。
+支持事务功能的数据库可以保证，
+数据库在报告一个事务执行完毕之前，
+会先将那个事务执行的所有更新都记录到永久性存储器（比如硬盘）上面。</p>
+<p>事务的另一个非常重要的属性和原子更新的概念密切相关：
+当多个事务并发运行时，
+每个事务都不应该看见其他事务正在进行的、尚不完整的修改。</p>
+<p>举个例子，
+如果一个事务正在计算所有分行的余额总和，
+它会将爱丽丝所在分行进行的扣帐操作和鲍勃所在分行的入账操作都考虑在内，
+而不会说只考虑了爱丽丝所在分行的扣帐操作，
+但并没有考虑鲍勃所在分行的入账操作；
+反之亦然。</p>
+<p>因此事务不仅要在事务效果的持久性方面做到“要么全部执行，要么全部都不执行”，
+它在事务效果的可见性方面也要做到这一点。</p>
+<p>直到一个事务执行完毕为止，
+这个事务进行的所有更新对于其他事务都是不可见的，
+而当事务完成的时候，
+事务进行的所有更新都会同时变为可见。</p>
+<p>在 PostgreSQL 里面，
+用户可以通过使用 <code class="docutils literal"><span class="pre">BEGIN</span></code> 和 <code class="docutils literal"><span class="pre">COMMIT</span></code> 这两个命令，
+将那些需要在事务里面执行的事务包围起来，
+从而创建一个事务。
+上面例子中的银行转账操作可以用以下事务来实现：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">BEGIN</span><span class="p">;</span>
+<span class="k">UPDATE</span> <span class="n">accounts</span> <span class="k">SET</span> <span class="n">balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="o">-</span> <span class="mf">100.00</span>
+    <span class="k">WHERE</span> <span class="k">name</span> <span class="o">=</span> <span class="s1">&#39;Alice&#39;</span><span class="p">;</span>
+<span class="c1">-- etc etc</span>
+<span class="k">COMMIT</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>如果在创建事务的过程中，
+我们临时决定放弃这个事务，
+那么可以使用 <code class="docutils literal"><span class="pre">ROLLBACK</span></code> 命令去代替 <code class="docutils literal"><span class="pre">COMMIT</span></code> ，
+从而撤销未执行的事务。</p>
+<p>PostgreSQL 实际上会把每条被执行的 SQL 语句当做是一个事务。
+如果用户没有显式地执行 <code class="docutils literal"><span class="pre">BEGIN</span></code> 命令，
+那么 PostgreSQL 将为每条单独的命令隐式地加上一个 <code class="docutils literal"><span class="pre">BEGIN</span></code> ，
+并在 SQL 命令入队成功之后，
+再追加一条 <code class="docutils literal"><span class="pre">COMMIT</span></code> 命令，
+将被执行的 SQL 命令包围起来。</p>
+<p>通过使用<em>保存点</em>，
+用户可以以一种更为粒状（granular fashion）的方式去控制事务中的语句。
+保存点允许用户在提交事务的过程中，
+选择性地放弃事务中的特定部分。
+在使用 <code class="docutils literal"><span class="pre">SAVEPOINT</span></code> 命令定义一个保存点之后，
+用户可以在有需要的时候，
+通过 <code class="docutils literal"><span class="pre">ROLLBACK</span></code> 命令回滚至那个保存点。
+当保存点被回滚时，
+位于保存点之内的所有数据库修改都会被撤销，
+但定义保存点之前所做的那些修改则会继续存在。</p>
+<p>在回滚至一个保存点之后，
+那个保存点还会继续存在，
+以便用户在有需要的时候再次进行回滚。
+与此相反，
+如果用户确定他们不再需要某个保存点，
+那么他们也可以释放那个保存点，
+使得系统可以回收某些与保存点相关的资源。
+需要注意的一点是，
+当一个保存点被释放/回滚时，
+在那个保存点之后定义的所有保存点也会自动被释放/回滚。</p>
+<p>因为所有这些动作都发生在事务块（transaction block）内部，
+所以这些动作对于其他数据库会话来说将是不可见的。
+当用户提交事务块之后，
+已提交的动作将作为一个整体（unit）变得对外部会话可见；
+至于那些被回滚了的操作，
+它们对于外部会话来说永远都是不可见的。</p>
+<p>回到之前银行数据库的例子。
+假设程序原本打算从爱丽丝的账户里面扣除 $100.00 ，
+并将这些钱转账到鲍勃的账户里面，
+但之后却发现原来应该转账到沃利的账号里面才对。
+如果程序使用了 PostgreSQL 的保存点特性，
+那么它可能会执行以下命令：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">BEGIN</span><span class="p">;</span>
+<span class="k">UPDATE</span> <span class="n">accounts</span> <span class="k">SET</span> <span class="n">balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="o">-</span> <span class="mf">100.00</span>
+    <span class="k">WHERE</span> <span class="k">name</span> <span class="o">=</span> <span class="s1">&#39;Alice&#39;</span><span class="p">;</span>
+<span class="k">SAVEPOINT</span> <span class="n">my_savepoint</span><span class="p">;</span>
+<span class="k">UPDATE</span> <span class="n">accounts</span> <span class="k">SET</span> <span class="n">balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="o">+</span> <span class="mf">100.00</span>
+    <span class="k">WHERE</span> <span class="k">name</span> <span class="o">=</span> <span class="s1">&#39;Bob&#39;</span><span class="p">;</span>
+<span class="c1">-- oops ... forget that and use Wally&#39;s account</span>
+<span class="k">ROLLBACK</span> <span class="k">TO</span> <span class="n">my_savepoint</span><span class="p">;</span>
+<span class="k">UPDATE</span> <span class="n">accounts</span> <span class="k">SET</span> <span class="n">balance</span> <span class="o">=</span> <span class="n">balance</span> <span class="o">+</span> <span class="mf">100.00</span>
+    <span class="k">WHERE</span> <span class="k">name</span> <span class="o">=</span> <span class="s1">&#39;Wally&#39;</span><span class="p">;</span>
+<span class="k">COMMIT</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>这个示例虽然非常简单，
+但它有效地向我们展示了如何通过保存点去对事务块进行控制。
+此外，
+当事务块因为错误而被系统标识为终止状态（aborted state）时，
+重新取得事务块控制权的唯一手段就是使用 <code class="docutils literal"><span class="pre">ROLLBACK</span></code> 。</p>
+</div>
+<div class="section" id="window-function">
+<h2>窗口函数（window function）<a class="headerlink" href="#window-function" title="永久链接至标题">¶</a></h2>
+<p><em>窗口函数</em>可以对表格中，
+与当前行（current row）有某种关联的一组行进行计算。
+窗口函数和聚合函数执行的计算是类似的。
+窗口函数和聚合函数的不同之处在于，
+使用窗口函数并不会导致多个行被聚合为单个输出行，
+被计算的各个行将继续保留它们各自的特性。
+此外，
+窗口函数在进行计算的时候，
+还可以访问查询结果里面除当前行之外的其他行。</p>
+<p>以下这个例子展示了怎样将每个雇员的薪水与他/她所在部门的平均薪水进行对比：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">depname</span><span class="p">,</span> <span class="n">empno</span><span class="p">,</span> <span class="n">salary</span><span class="p">,</span>
+    <span class="n">avg</span><span class="p">(</span><span class="n">salary</span><span class="p">)</span> <span class="k">OVER</span> <span class="p">(</span><span class="k">PARTITION</span> <span class="k">BY</span> <span class="n">depname</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">empsalary</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre>  <span class="n">depname</span>  <span class="o">|</span> <span class="n">empno</span> <span class="o">|</span> <span class="n">salary</span> <span class="o">|</span>          <span class="n">avg</span>
+<span class="c1">-----------+-------+--------+-----------------------</span>
+ <span class="n">develop</span>   <span class="o">|</span>    <span class="mf">11</span> <span class="o">|</span>   <span class="mf">5200</span> <span class="o">|</span> <span class="mf">5020.0000000000000000</span>
+ <span class="n">develop</span>   <span class="o">|</span>     <span class="mf">7</span> <span class="o">|</span>   <span class="mf">4200</span> <span class="o">|</span> <span class="mf">5020.0000000000000000</span>
+ <span class="n">develop</span>   <span class="o">|</span>     <span class="mf">9</span> <span class="o">|</span>   <span class="mf">4500</span> <span class="o">|</span> <span class="mf">5020.0000000000000000</span>
+ <span class="n">develop</span>   <span class="o">|</span>     <span class="mf">8</span> <span class="o">|</span>   <span class="mf">6000</span> <span class="o">|</span> <span class="mf">5020.0000000000000000</span>
+ <span class="n">develop</span>   <span class="o">|</span>    <span class="mf">10</span> <span class="o">|</span>   <span class="mf">5200</span> <span class="o">|</span> <span class="mf">5020.0000000000000000</span>
+ <span class="n">personnel</span> <span class="o">|</span>     <span class="mf">5</span> <span class="o">|</span>   <span class="mf">3500</span> <span class="o">|</span> <span class="mf">3700.0000000000000000</span>
+ <span class="n">personnel</span> <span class="o">|</span>     <span class="mf">2</span> <span class="o">|</span>   <span class="mf">3900</span> <span class="o">|</span> <span class="mf">3700.0000000000000000</span>
+ <span class="n">sales</span>     <span class="o">|</span>     <span class="mf">3</span> <span class="o">|</span>   <span class="mf">4800</span> <span class="o">|</span> <span class="mf">4866.6666666666666667</span>
+ <span class="n">sales</span>     <span class="o">|</span>     <span class="mf">1</span> <span class="o">|</span>   <span class="mf">5000</span> <span class="o">|</span> <span class="mf">4866.6666666666666667</span>
+ <span class="n">sales</span>     <span class="o">|</span>     <span class="mf">4</span> <span class="o">|</span>   <span class="mf">4800</span> <span class="o">|</span> <span class="mf">4866.6666666666666667</span>
+<span class="p">(</span><span class="mf">10</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>输出中的前三个列都来自于 <code class="docutils literal"><span class="pre">empsalary</span></code> 表格，
+而最后一个列则展示了窗口函数为每个行计算出的结果：
+窗口函数根据当前行 <code class="docutils literal"><span class="pre">depname</span></code> 列的值，
+计算出了 <code class="docutils literal"><span class="pre">empsalary</span></code> 表格中所有具有相同 <code class="docutils literal"><span class="pre">depname</span></code> 值的行的平均值。
+（这个窗口函数实际上和普通的平均聚合函数是同一个函数，
+只是 <code class="docutils literal"><span class="pre">OVER</span></code> 语句使得这个聚合函数被当做成了一个窗口函数，
+并使用它去对一组特定的行进行计算。）</p>
+<p>一个窗口函数调用总是包含一个 <code class="docutils literal"><span class="pre">OVER</span></code> 语句，
+这个语句紧跟在窗口函数的名字和参数之后，
+而这种语法也将窗口函数和普通函数以及聚合函数区别了开来。
+<code class="docutils literal"><span class="pre">OVER</span></code> 语句决定了窗口函数在对被查询的行进行处理之前，
+是如何对那些行进行拆分的。
+至于 <code class="docutils literal"><span class="pre">OVER</span></code> 语句中的 <code class="docutils literal"><span class="pre">PARTITION</span> <span class="pre">BY</span></code> 表达式，
+则决定了窗口函数是如何对那些拥有相同 <code class="docutils literal"><span class="pre">PARTITION</span> <span class="pre">BY</span></code> 值的行进行分组或者分区的。
+对于表格中的每个行，
+窗口函数都会对与这个行处于相同分区的各个行进行计算。</p>
+<p>此外，
+通过在 <code class="docutils literal"><span class="pre">OVER</span></code> 语句内部使用 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> 语句，
+用户可以决定窗口函数在处理各个行时所使用的顺序，
+就像这样：
+（<code class="docutils literal"><span class="pre">OVER</span></code> 语句内部的 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> 语句的值可以跟输出行时使用的 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> 语句的值不同）。</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">depname</span><span class="p">,</span> <span class="n">empno</span><span class="p">,</span> <span class="n">salary</span><span class="p">,</span>
+       <span class="n">rank</span><span class="p">()</span> <span class="k">OVER</span> <span class="p">(</span><span class="k">PARTITION</span> <span class="k">BY</span> <span class="n">depname</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">salary</span> <span class="k">DESC</span><span class="p">)</span>
+<span class="k">FROM</span> <span class="n">empsalary</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre>  <span class="n">depname</span>  <span class="o">|</span> <span class="n">empno</span> <span class="o">|</span> <span class="n">salary</span> <span class="o">|</span> <span class="n">rank</span>
+<span class="c1">-----------+-------+--------+------</span>
+ <span class="n">develop</span>   <span class="o">|</span>     <span class="mf">8</span> <span class="o">|</span>   <span class="mf">6000</span> <span class="o">|</span>    <span class="mf">1</span>
+ <span class="n">develop</span>   <span class="o">|</span>    <span class="mf">10</span> <span class="o">|</span>   <span class="mf">5200</span> <span class="o">|</span>    <span class="mf">2</span>
+ <span class="n">develop</span>   <span class="o">|</span>    <span class="mf">11</span> <span class="o">|</span>   <span class="mf">5200</span> <span class="o">|</span>    <span class="mf">2</span>
+ <span class="n">develop</span>   <span class="o">|</span>     <span class="mf">9</span> <span class="o">|</span>   <span class="mf">4500</span> <span class="o">|</span>    <span class="mf">4</span>
+ <span class="n">develop</span>   <span class="o">|</span>     <span class="mf">7</span> <span class="o">|</span>   <span class="mf">4200</span> <span class="o">|</span>    <span class="mf">5</span>
+ <span class="n">personnel</span> <span class="o">|</span>     <span class="mf">2</span> <span class="o">|</span>   <span class="mf">3900</span> <span class="o">|</span>    <span class="mf">1</span>
+ <span class="n">personnel</span> <span class="o">|</span>     <span class="mf">5</span> <span class="o">|</span>   <span class="mf">3500</span> <span class="o">|</span>    <span class="mf">2</span>
+ <span class="n">sales</span>     <span class="o">|</span>     <span class="mf">1</span> <span class="o">|</span>   <span class="mf">5000</span> <span class="o">|</span>    <span class="mf">1</span>
+ <span class="n">sales</span>     <span class="o">|</span>     <span class="mf">4</span> <span class="o">|</span>   <span class="mf">4800</span> <span class="o">|</span>    <span class="mf">2</span>
+ <span class="n">sales</span>     <span class="o">|</span>     <span class="mf">3</span> <span class="o">|</span>   <span class="mf">4800</span> <span class="o">|</span>    <span class="mf">2</span>
+<span class="p">(</span><span class="mf">10</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>正如这里所示，
+<code class="docutils literal"><span class="pre">rank</span></code> 函数将根据 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> 语句定义的顺序，
+为具有相同 <code class="docutils literal"><span class="pre">PARTITION</span> <span class="pre">BY</span></code> 值的各个分区中的每个行计算出这些行在自己所处分区中的排名（rank）。
+<code class="docutils literal"><span class="pre">rank</span></code> 窗口函数不需要给定参数，
+因为它的行为完全由 <code class="docutils literal"><span class="pre">OVER</span></code> 语句决定。</p>
+<p>查询的 <code class="docutils literal"><span class="pre">FROM</span></code> 语句，
+用于过滤的 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句，
+以及 <code class="docutils literal"><span class="pre">GROUP</span> <span class="pre">BY</span></code> 语句和可能有的 <code class="docutils literal"><span class="pre">HAVING</span></code> 语句，
+通过这些语句，
+用户可以构建出一个“虚拟表”，
+而窗口函数则可以用于处理这些虚拟表中的行。
+举个例子，
+如果一个行因为不符合 <code class="docutils literal"><span class="pre">WHERE</span></code> 语句的条件而被移除了，
+那么窗口函数将不会对这个行进行处理。
+一个查询语句可以包含多个窗口函数，
+这些窗口函数可以通过不同的 <code class="docutils literal"><span class="pre">OVER</span></code> 语句，
+以不同的方式对数据进行切片（slice up），
+但所有窗口函数处理的都是由相同的虚拟表所定义的一组行。</p>
+<p>前面曾经说过，
+如果行的排列顺序并不重要，
+那么我们可以省略 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> 语句。
+与此类似，
+如果窗口函数要处理的是一个包含了所有行的分区，
+那么我们也可以省略 <code class="docutils literal"><span class="pre">PARTITION</span> <span class="pre">BY</span></code> 语句。</p>
+<p>窗口函数还有一个重要的相关概念：
+对于每个行来说，
+它所在的分区都有一组行可以被称为这个行的<em>窗口框</em>（window frame）。
+很多（但不是所有）窗口函数都只会对窗口框中的行进行计算，
+而不是对整个分区的所有行进行计算。</p>
+<p>在默认情况下，
+如果用户使用了 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> ，
+那么窗口框将由分区开头直到当前行为止的所有行，
+以及那些在当前行之后，
+但是与当前行的 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> 结果相等的行组成。
+与此相反，
+如果用户没有给定 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> ，
+那么默认的窗口框将由分区中的所有行组成。
+以下展示了一个使用 <code class="docutils literal"><span class="pre">sum</span></code> 窗口函数的例子：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">salary</span><span class="p">,</span> <span class="n">sum</span><span class="p">(</span><span class="n">salary</span><span class="p">)</span> <span class="k">OVER</span> <span class="p">()</span> <span class="k">FROM</span> <span class="n">empsalary</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre> <span class="n">salary</span> <span class="o">|</span>  <span class="n">sum</span>
+<span class="c1">--------+-------</span>
+   <span class="mf">5200</span> <span class="o">|</span> <span class="mf">47100</span>
+   <span class="mf">5000</span> <span class="o">|</span> <span class="mf">47100</span>
+   <span class="mf">3500</span> <span class="o">|</span> <span class="mf">47100</span>
+   <span class="mf">4800</span> <span class="o">|</span> <span class="mf">47100</span>
+   <span class="mf">3900</span> <span class="o">|</span> <span class="mf">47100</span>
+   <span class="mf">4200</span> <span class="o">|</span> <span class="mf">47100</span>
+   <span class="mf">4500</span> <span class="o">|</span> <span class="mf">47100</span>
+   <span class="mf">4800</span> <span class="o">|</span> <span class="mf">47100</span>
+   <span class="mf">6000</span> <span class="o">|</span> <span class="mf">47100</span>
+   <span class="mf">5200</span> <span class="o">|</span> <span class="mf">47100</span>
+<span class="p">(</span><span class="mf">10</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>上面这个查询因为没有在 <code class="docutils literal"><span class="pre">OVER</span></code> 语句里面加上 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> 语句，
+所以这个查询要处理的窗口框和分区一样，
+并且因为这个查询没有用到 <code class="docutils literal"><span class="pre">PARTITION</span> <span class="pre">BY</span></code> 语句，
+所以这个分区将包含整个表格的所有行：
+换句话说，
+每个总和（sum）都是通过对整个表格进行计算得出的，
+所以对于表格中的每个行，
+查询都给出了相同的结果。</p>
+<p>不过如果我们给这个查询加上 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> 语句的话，
+那么将得到一个非常不同的结果：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">salary</span><span class="p">,</span> <span class="n">sum</span><span class="p">(</span><span class="n">salary</span><span class="p">)</span> <span class="k">OVER</span> <span class="p">(</span><span class="k">ORDER</span> <span class="k">BY</span> <span class="n">salary</span><span class="p">)</span> <span class="k">FROM</span> <span class="n">empsalary</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre> <span class="n">salary</span> <span class="o">|</span>  <span class="n">sum</span>
+<span class="c1">--------+-------</span>
+   <span class="mf">3500</span> <span class="o">|</span>  <span class="mf">3500</span>
+   <span class="mf">3900</span> <span class="o">|</span>  <span class="mf">7400</span>
+   <span class="mf">4200</span> <span class="o">|</span> <span class="mf">11600</span>
+   <span class="mf">4500</span> <span class="o">|</span> <span class="mf">16100</span>
+   <span class="mf">4800</span> <span class="o">|</span> <span class="mf">25700</span>
+   <span class="mf">4800</span> <span class="o">|</span> <span class="mf">25700</span>
+   <span class="mf">5000</span> <span class="o">|</span> <span class="mf">30700</span>
+   <span class="mf">5200</span> <span class="o">|</span> <span class="mf">41100</span>
+   <span class="mf">5200</span> <span class="o">|</span> <span class="mf">41100</span>
+   <span class="mf">6000</span> <span class="o">|</span> <span class="mf">47100</span>
+<span class="p">(</span><span class="mf">10</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>这次的总和是通过将第一行至到当前行的所有薪水值都相加起来，
+然后再加上所有与当前行具有相同薪水值的行计算得出的
+（注意结果中那些具有相同薪水值的行的计算结果）。</p>
+<p>窗口函数只能在 <code class="docutils literal"><span class="pre">SELECT</span></code> 列表或者查询的 <code class="docutils literal"><span class="pre">ORDER</span> <span class="pre">BY</span></code> 语句中使用，
+它不能用在 <code class="docutils literal"><span class="pre">GROUP</span> <span class="pre">BY</span></code> 、 <code class="docutils literal"><span class="pre">HAVING</span></code> 和 <code class="docutils literal"><span class="pre">WHERE</span></code> 等语句中，
+这是因为窗口函数在逻辑上需要等到 <code class="docutils literal"><span class="pre">GROUP</span> <span class="pre">BY</span></code> 这些语句执行完了之后再执行。
+此外，
+窗口函数也会在普通的聚合函数执行完毕之后执行，
+这意味着我们可以将聚合函数用作窗口函数的参数，
+但反过来则不可以。</p>
+<p>用户可以在执行窗口函数之后，
+使用子查询对计算所得的行进行过滤或者分组：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">depname</span><span class="p">,</span> <span class="n">empno</span><span class="p">,</span> <span class="n">salary</span><span class="p">,</span> <span class="n">enroll_date</span>
+<span class="k">FROM</span>
+  <span class="p">(</span><span class="k">SELECT</span> <span class="n">depname</span><span class="p">,</span> <span class="n">empno</span><span class="p">,</span> <span class="n">salary</span><span class="p">,</span> <span class="n">enroll_date</span><span class="p">,</span>
+          <span class="n">rank</span><span class="p">()</span> <span class="k">OVER</span> <span class="p">(</span><span class="k">PARTITION</span> <span class="k">BY</span> <span class="n">depname</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">salary</span> <span class="k">DESC</span><span class="p">,</span> <span class="n">empno</span><span class="p">)</span> <span class="k">AS</span> <span class="n">pos</span>
+     <span class="k">FROM</span> <span class="n">empsalary</span>
+  <span class="p">)</span> <span class="k">AS</span> <span class="n">ss</span>
+<span class="k">WHERE</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="mf">3</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>这个查询只会展示内查询里面，
+<code class="docutils literal"><span class="pre">rank</span></code> 值小于 3 的行。</p>
+<p>当查询需要用到多个窗口函数时，
+用户可以用多个 <code class="docutils literal"><span class="pre">OVER</span></code> 语句将这些窗口函数一个接一个地写出来，
+但是这种做法在多个函数需要进行相同的窗口计算（windowing behavior）时，
+非常容易出错，
+并且还会产生重复的计算。
+为了解决这个问题，
+我们可以在 <code class="docutils literal"><span class="pre">WINDOW</span></code> 语句里面对需要进行的窗口计算进行命名，
+然后在 <code class="docutils literal"><span class="pre">OVER</span></code> 语句里面引用这些窗口计算，
+就像这样：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="n">sum</span><span class="p">(</span><span class="n">salary</span><span class="p">)</span> <span class="k">OVER</span> <span class="n">w</span><span class="p">,</span> <span class="n">avg</span><span class="p">(</span><span class="n">salary</span><span class="p">)</span> <span class="k">OVER</span> <span class="n">w</span>
+  <span class="k">FROM</span> <span class="n">empsalary</span>
+  <span class="k">WINDOW</span> <span class="n">w</span> <span class="k">AS</span> <span class="p">(</span><span class="k">PARTITION</span> <span class="k">BY</span> <span class="n">depname</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="n">salary</span> <span class="k">DESC</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>关于窗口函数的更多信息，
+请查看 <a class="reference external" href="http://www.postgresql.org/docs/devel/static/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS">4.2.8 节</a> 、
+<a class="reference external" href="http://www.postgresql.org/docs/devel/static/functions-window.html">9.21 节</a> 、
+<a class="reference external" href="http://www.postgresql.org/docs/devel/static/queries-table-expressions.html#QUERIES-WINDOW">7.2.5 节</a> 以及
+<a class="reference external" href="http://www.postgresql.org/docs/devel/static/sql-select.html">SELECT 命令的参考页面</a> 。</p>
+</div>
+<div class="section" id="id7">
+<h2>继承<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h2>
+<p>继承（inheritance）是一个来自于面向对象数据库的概念，
+它为数据库设计带来了新的可能性。</p>
+<p>假设我们现在要创建两个表格，
+一个表格储存城市的相关信息，
+而另一个表格则储存首都的相关信息。
+因为首都也属于城市，
+所以你可能会想要在展示所有城市的时候，
+将首都也一并展示出来。
+为此，
+你可能会写出以下代码：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">capitals</span> <span class="p">(</span>
+  <span class="k">name</span>       <span class="nb">text</span><span class="p">,</span>
+  <span class="n">population</span> <span class="nb">real</span><span class="p">,</span>
+  <span class="n">altitude</span>   <span class="nb">int</span><span class="p">,</span>    <span class="c1">-- (以英尺为单位)</span>
+  <span class="n">state</span>      <span class="nb">char</span><span class="p">(</span><span class="mf">2</span><span class="p">)</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">non_capitals</span> <span class="p">(</span>
+  <span class="k">name</span>       <span class="nb">text</span><span class="p">,</span>
+  <span class="n">population</span> <span class="nb">real</span><span class="p">,</span>
+  <span class="n">altitude</span>   <span class="nb">int</span>     <span class="c1">-- (以英尺为单位)</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span> <span class="k">VIEW</span> <span class="n">cities</span> <span class="k">AS</span>
+  <span class="k">SELECT</span> <span class="k">name</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">altitude</span> <span class="k">FROM</span> <span class="n">capitals</span>
+    <span class="k">UNION</span>
+  <span class="k">SELECT</span> <span class="k">name</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">altitude</span> <span class="k">FROM</span> <span class="n">non_capitals</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>这种做法虽然可以实现我们想要的查询效果，
+但是当我们因为某个原因需要对表格中的某些行进行更新的时候，
+这种做法就会显得异常丑陋。</p>
+<p>以下是一个更好的解决方法：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">cities</span> <span class="p">(</span>
+  <span class="k">name</span>       <span class="nb">text</span><span class="p">,</span>
+  <span class="n">population</span> <span class="nb">real</span><span class="p">,</span>
+  <span class="n">altitude</span>   <span class="nb">int</span>     <span class="c1">-- (以英尺为单位)</span>
+<span class="p">);</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">capitals</span> <span class="p">(</span>
+  <span class="n">state</span>      <span class="nb">char</span><span class="p">(</span><span class="mf">2</span><span class="p">)</span>
+<span class="p">)</span> <span class="k">INHERITS</span> <span class="p">(</span><span class="n">cities</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>在这个示例中，
+一个 <code class="docutils literal"><span class="pre">capitals</span></code> 表格的行将从它的父表格（parent） <code class="docutils literal"><span class="pre">cities</span></code> 表格那里继承它的所有列（<code class="docutils literal"><span class="pre">name</span></code> 、 <code class="docutils literal"><span class="pre">population</span></code> 和 <code class="docutils literal"><span class="pre">altitude</span></code>）。
+其中，
+<code class="docutils literal"><span class="pre">name</span></code> 列的类型为 <code class="docutils literal"><span class="pre">text</span></code> ，
+这是 PostgreSQL 内置的一种类型，
+用于储存长度可变的文字字符串。
+与 <code class="docutils literal"><span class="pre">cities</span></code> 表格相比，
+<code class="docutils literal"><span class="pre">capitals</span></code> 表格拥有额外的 <code class="docutils literal"><span class="pre">state</span></code> 列，
+这个列用于储存首都所属的国家。
+在 PostgreSQL 中，
+一个表格可以继承自任意多个其他表格。</p>
+<p>作为例子，
+下面这个查询可以找出海拔超过 500 英尺的城市和首都，
+并返回它们的名字和海拔：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="k">name</span><span class="p">,</span> <span class="n">altitude</span>
+  <span class="k">FROM</span> <span class="n">cities</span>
+    <span class="k">WHERE</span> <span class="n">altitude</span> <span class="o">&gt;</span> <span class="mf">500</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>以下是这个查询的执行结果：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre>   <span class="k">name</span>    <span class="o">|</span> <span class="n">altitude</span>
+<span class="c1">-----------+----------</span>
+ <span class="n">Las</span> <span class="n">Vegas</span> <span class="o">|</span>     <span class="mf">2174</span>
+ <span class="n">Mariposa</span>  <span class="o">|</span>     <span class="mf">1953</span>
+ <span class="n">Madison</span>   <span class="o">|</span>      <span class="mf">845</span>
+<span class="p">(</span><span class="mf">3</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>另一方面，
+以下这个查询可以找出那些不是首都，
+但海拔都超过 500 英尺的城市：</p>
+<div class="highlight-postgresql"><div class="highlight"><pre><span class="k">SELECT</span> <span class="k">name</span><span class="p">,</span> <span class="n">altitude</span>
+    <span class="k">FROM</span> <span class="k">ONLY</span> <span class="n">cities</span>
+    <span class="k">WHERE</span> <span class="n">altitude</span> <span class="o">&gt;</span> <span class="mf">500</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-postgresql"><div class="highlight"><pre>   <span class="k">name</span>    <span class="o">|</span> <span class="n">altitude</span>
+<span class="c1">-----------+----------</span>
+ <span class="n">Las</span> <span class="n">Vegas</span> <span class="o">|</span>     <span class="mf">2174</span>
+ <span class="n">Mariposa</span>  <span class="o">|</span>     <span class="mf">1953</span>
+<span class="p">(</span><span class="mf">2</span> <span class="k">rows</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>位于 <code class="docutils literal"><span class="pre">cities</span></code> 前面的 <code class="docutils literal"><span class="pre">ONLY</span></code> 表示查询只需要对 <code class="docutils literal"><span class="pre">cities</span></code> 表格进行查询，
+至于那些在继承层次里面低于 <code class="docutils literal"><span class="pre">cities</span></code> 表格的其他表格，
+则不需要进行查询。
+这个教程里面介绍过的很多命令，
+比如 <code class="docutils literal"><span class="pre">SELECT</span></code> 、 <code class="docutils literal"><span class="pre">UPDATE</span></code> 和 <code class="docutils literal"><span class="pre">DELETE</span></code> ，
+都支持这个 <code class="docutils literal"><span class="pre">ONLY</span></code> 选项。</p>
+</div>
+<div class="section" id="id8">
+<h2>结语<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h2>
+<p>因为这个入门教程面向的是刚刚接触 SQL 的用户，
+所以 PostgreSQL 的很多特性都没有在这个教程里面提到，
+不过本文档的后续章节将陆续对这些特性进行介绍。</p>
+<p>如果你需要更多入门方面的学习材料，
+请访问 <a class="reference external" href="http://www.postgresql.org/">PostgreSQL 的主页</a>以查看更多相关资源的链接。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             >索引</a></li>
+        <li class="right" >
+          <a href="the-sql-language.html" title="SQL 语言简介"
+             >上一页</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PostgreSQL 数据库文档</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; 版权所有 2015, 黄健宏.
+      由 <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1 创建。
+    </div>
+  </body>
+</html>

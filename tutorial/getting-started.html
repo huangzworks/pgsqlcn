@@ -1,0 +1,413 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>入门须知 &mdash; PostgreSQL 数据库文档</title>
+    
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '9.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/translations.js"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="top" title="PostgreSQL 数据库文档" href="../index.html" />
+    <link rel="next" title="SQL 语言简介" href="the-sql-language.html" />
+    <link rel="prev" title="PostgreSQL 简介" href="../preface/what-is-postgresql.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="the-sql-language.html" title="SQL 语言简介"
+             accesskey="N">下一页</a> |</li>
+        <li class="right" >
+          <a href="../preface/what-is-postgresql.html" title="PostgreSQL 简介"
+             accesskey="P">上一页</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PostgreSQL 数据库文档</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">入门须知</a><ul>
+<li><a class="reference internal" href="#postgresql">安装 PostgreSQL</a></li>
+<li><a class="reference internal" href="#id2">基本架构</a></li>
+<li><a class="reference internal" href="#id3">创建数据库</a></li>
+<li><a class="reference internal" href="#id4">访问数据库</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="../preface/what-is-postgresql.html"
+                        title="上一章">PostgreSQL 简介</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="the-sql-language.html"
+                        title="下一章">SQL 语言简介</a></p>
+  <div role="note" aria-label="source link">
+    <h3>本页</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/tutorial/getting-started.txt"
+            rel="nofollow">显示源代码</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的术语，模块，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="id1">
+<h1>入门须知<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<div class="section" id="postgresql">
+<h2>安装 PostgreSQL<a class="headerlink" href="#postgresql" title="永久链接至标题">¶</a></h2>
+<p>在使用 PostgreSQL 之前，
+我们必须确保 PostgreSQL 已经被安装到了电脑上面。
+在有些情况下，
+某些操作系统发行版可能已经自带了 PostgreSQL ，
+又或者你的系统管理员可能已经帮你安装好了 PostgreSQL ，
+这时你就需要从操作系统手册或者系统管理员那里获取访问 PostgreSQL 所需的信息。</p>
+<p>如果你无法确认 PostgreSQL 是否已经安装，
+又或者不确定已有的 PostgreSQL 能否满足你的实验要求，
+那么你可以自己动手安装 PostgreSQL 。
+安装 PostgreSQL 并不困难，
+并且还是一个非常好的练习。
+安装 PostgreSQL 并不需要超级用户（superuser，root）访问权限，
+所以任何非特权（unprivileged）用户都可以自行安装 PostgreSQL 。</p>
+<p>如果你需要自行安装 PostgreSQL ，
+那么请查看本文档第 15 章中介绍的安装方法，
+并在安装完成之后再转过头来阅读这一章。
+在阅读安装方法的过程中，
+请特别注意文中关于设置正确的环境变量的那一节。</p>
+<p>如果系统管理员没有按照默认的方法对 PostgreSQL 进行设置，
+那么你可能就需要做一些额外的工作。
+比如说，
+如果数据库服务器是一个远程服务器，
+那么你就需要将 <code class="docutils literal"><span class="pre">PGHOST</span></code> 环境变量设置为那个数据库服务器的名字，
+并将 <code class="docutils literal"><span class="pre">PGPORT</span></code> 环境变量设置为那个服务器的端口号。</p>
+<p>关于服务器设置的一个底线是：
+如果你在尝试启动一个应用程序的时候，
+该程序向你抱怨它无法连接到服务器，
+那么你就应该联系你的管理员；
+如果你的服务器是由你自己管理的，
+那么你就应该去阅读相关的文档，
+确保相关的环境已经被正确地设置。</p>
+</div>
+<div class="section" id="id2">
+<h2>基本架构<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>在学习如何操作 PostgreSQL 之前，
+我们需要先了解一下 PostgreSQL 系统的基本架构。
+理解 PostgreSQL 的各个部分是如何进行交互的，
+将有助于我们学习本章接下来要介绍的知识。</p>
+<p>用数据库的行话来讲，
+PostgreSQL 使用的是客户端/服务器模型。
+一个 PostgreSQL 会话（session）由以下协作进程（程序）组成：</p>
+<ul class="simple">
+<li>一个服务器进程，
+它负责管理数据库文件、接受客户端程序对数据库的连接请求，
+并对数据库执行客户端指定的动作。
+这个数据库服务器程序的名字叫做 <code class="docutils literal"><span class="pre">postgres</span></code> 。</li>
+</ul>
+<ul class="simple">
+<li>客户端（又称“前端”）程序，
+用户使用这些程序来指定对数据库的操作。
+客户端程序在本质上可以是非常多样的：
+一个客户端可以是一个文本工具、
+一个图形程序、
+一个通过访问数据库来显示网页的 web 服务器，
+又或者是一个专门的数据库维护工具。
+某些客户端程序是跟着 PostgreSQL 一起发行的，
+而其他大部分客户端则是由用户自己开发的。</li>
+</ul>
+<p>跟典型的客户端/服务器程序一样，
+PostgreSQL 的客户端和服务器双方可以运行在不同的主机（host）上面。
+在这种情况下，
+客户端和服务器将通过 TCP/IP 网络连接进行通讯。
+读者应该牢牢记住这一点，
+因为在客户端主机上能够访问的文件，
+在服务器主机上并不一定能够访问
+（又或者需要以不同的名字来访问）。</p>
+<p>PostgreSQL 服务器能够并发地处理来自多个客户端的多个连接。
+为了做到这一点，
+服务器会为每个连接都启动（或者说，fork）一个新的进程。
+在此之后，
+客户端和新进程就可以直接进行通讯，
+而不必担心被原来的 <code class="docutils literal"><span class="pre">postgres</span></code> 进程打扰。
+因此，
+主服务器进程将一直运行，
+等待客户端的连接请求；
+与此相反，
+客户端和与之相关联的服务器进程则会不断地出现和消逝。
+（当然，
+以上这些操作对于用户来说都是透明的，
+在这里提及这些知识只是为了完整性考虑。）</p>
+</div>
+<div class="section" id="id3">
+<h2>创建数据库<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<p>为了判断我们能否访问数据库服务器，
+我们首先要做的一个测试就是尝试去创建一个数据库。
+一个运行中的 PostgreSQL 服务器可以管理多个数据库。
+一般来说，
+每个用户都会为自己的每个项目独立使用一个数据库。</p>
+<p>如果你的系统管理员已经帮你创建好了数据库，
+并且他已经把属于你的数据库的名字告诉了你，
+那么你就可以跳过本节介绍的步骤，
+直接阅读下一节。</p>
+<p>举个例子，
+要创建一个名为 <code class="docutils literal"><span class="pre">mydb</span></code> 的新数据库，
+你可以使用以下命令：</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>createdb mydb
+</pre></div>
+</div>
+<p>如果这个操作没有返回任何响应信息，
+那么说明操作成功，
+请跳过本节余下的部分，
+直接阅读下一节。</p>
+<p>如果你看见了一条类似这样的信息：</p>
+<div class="highlight-bash"><div class="highlight"><pre>createdb: <span class="nb">command </span>not found
+</pre></div>
+</div>
+<p>那么说明 PostgreSQL 并未被正确地安装。
+一个可能是 PostgreSQL 并未被安装，
+而另一个可能则是终端没有在搜索路径里面包含 PostgreSQL 所在的位置。
+你可以尝试通过绝对路径直接执行命令：</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>/usr/local/pgsql/bin/createdb mydb
+</pre></div>
+</div>
+<p>在不同的机器上面，
+PostgreSQL 所在的路径可能会有所不同。
+请联系你的系统管理员，
+又或者根据安装手册的指示改正执行命令时的路径。</p>
+<p>执行 <code class="docutils literal"><span class="pre">createdb</span></code> 命令可能得到的另一个回复是：</p>
+<div class="highlight-bash"><div class="highlight"><pre>createdb: could not connect to database postgres: could not connect to server: No such file or directory
+        Is the server running locally and accepting
+        connections on Unix domain socket <span class="s2">&quot;/tmp/.s.PGSQL.5432&quot;</span>?
+</pre></div>
+</div>
+<p>这个回复表示服务器并未启动，
+又或者它并未以 <code class="docutils literal"><span class="pre">createdb</span></code> 期待的方式启动。
+同样地，
+在遇到这个问题时，
+请检查安装手册，
+或者联系你的系统管理员。</p>
+<p>除了以上两种情况之外，
+<code class="docutils literal"><span class="pre">createdb</span></code> 还可能会回复一条包含了你的 PostgreSQL 用户名的错误信息：</p>
+<div class="highlight-bash"><div class="highlight"><pre>createdb: could not connect to database postgres: FATAL:  role <span class="s2">&quot;joe&quot;</span> does not exist
+</pre></div>
+</div>
+<p>当你的系统管理员没有为你创建 PostgreSQL 用户账号的时候，
+这种回复就会出现。
+（注意，
+PostgreSQL 的用户账号和操作系统的用户账号并不是一回事。）</p>
+<p>如果你就是系统管理员，
+那么请查看本文档的第 20 章，
+学习创建用户的具体步骤。
+为了创建第一个 PostgreSQL 用户账号，
+你将需要成为安装了 PostgreSQL 的那个操作系统用户组属下的用户（这个用户组通常被命名为 <code class="docutils literal"><span class="pre">postgres</span></code> ）。</p>
+<p>还有一种可能出现的情况，
+就是分配给你的 PostgreSQL 用户名和你的操作系统用户名并不相同；
+在这种情况下，
+你就需要使用 <code class="docutils literal"><span class="pre">-U</span></code> 去切换或者设置 <code class="docutils literal"><span class="pre">PGUSER</span></code> 环境变量，
+从而指定你的 PostgreSQL 用户名。</p>
+<p>如果你拥有了一个账号，
+但该账号并不具备创建数据库所需的权限，
+那么你将看见以下信息：</p>
+<div class="highlight-bash"><div class="highlight"><pre>createdb: database creation failed: ERROR:  permission denied to create database
+</pre></div>
+</div>
+<p>如果你遇到了这种情况，
+那么说明你并不具备创建新数据库所需的权限。
+为此，
+你需要联系系统管理员，
+让他授予（grant）你创建数据库的权力。
+如果你是自己安装 PostgreSQL 的，
+那么为了执行这个教程里面展示的操作，
+你需要登录启动 PostgreSQL 服务器时使用的那个账号。</p>
+<p>PostgreSQL 允许用户在同一台机器上面创建任意数量的数据库，
+因此除了上面提到的 <code class="docutils literal"><span class="pre">mydb</span></code> 之外，
+用户还可以创建其他不同名字的数据库。
+数据库名字必须以英文字母开头，
+并且长度不能超过 63 个字节。
+一种常见的做法是创建一个与当前用户名字相同的数据库。
+很多工具都会假设用户的名字就是数据库的名字，
+并通过这一假设来减少用户需要输入的字符数量。
+要创建一个与用户名同名的数据库，
+用户只需要直接执行以下命令就可以了：</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>createdb
+</pre></div>
+</div>
+<p>当你不再想要使用数据库的时候，
+你可以考虑移除它。
+比如说，
+如果你是 <code class="docutils literal"><span class="pre">mydb</span></code> 数据库的拥有者（创建者），
+那么你可以使用以下命令来销毁它：</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>dropdb mydb
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">dropdb</span></code> 命令将从物理上移除与 <code class="docutils literal"><span class="pre">mydb</span></code> 数据库有关的所有文件，
+并且这个操作是无法撤销的，
+因此你在执行 <code class="docutils literal"><span class="pre">dropdb</span></code> 的时候一定要三思而后行。
+跟 <code class="docutils literal"><span class="pre">createdb</span></code> 命令一样，
+如果被移除的数据库跟用户名同名，
+那么用户只需要执行 <code class="docutils literal"><span class="pre">dropdb</span></code> 就可以直接删除与用户名同名的那个数据库。</p>
+<p>要了解关于 <code class="docutils literal"><span class="pre">createdb</span></code> 命令和 <code class="docutils literal"><span class="pre">dropdb</span></code> 命令的更多信息，
+请参考 <a class="reference external" href="http://www.postgresql.org/docs/9.5/static/app-createdb.html">createdb</a> 的文档和 <a class="reference external" href="http://www.postgresql.org/docs/9.5/static/app-dropdb.html">dropdb</a> 的文档。</p>
+</div>
+<div class="section" id="id4">
+<h2>访问数据库<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p>在创建了数据库之后，
+我们就可以通过以下几种方法去访问数据库：</p>
+<ul class="simple">
+<li>运行名为 <strong>psql</strong> 的 PostgreSQL 交互终端程序，
+这个程序允许用户交互式地输入、编辑和执行 SQL 命令。</li>
+<li>使用类似 pgAdmin 这样的图形前端工具，
+又或者带有 ODBC 或 JDBC 支持的 office 套件来创建和操作数据库。</li>
+<li>在多种可用的语言绑定（bindings）里面，
+选择一种去编写一个定制的程序。
+本文档的第 4 章列出了所有可选的语言绑定。</li>
+</ul>
+<p>本教程将使用 <code class="docutils literal"><span class="pre">psql</span></code> 程序来展示如何执行数据库命令。
+要通过 <code class="docutils literal"><span class="pre">psql</span></code> 程序来访问 <code class="docutils literal"><span class="pre">mydb</span></code> 数据库，
+我们可以执行以下命令：</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>psql mydb
+</pre></div>
+</div>
+<p>跟之前介绍的 <code class="docutils literal"><span class="pre">createdb</span></code> 程序一样，
+如果用户在执行 <code class="docutils literal"><span class="pre">psql</span></code> 程序的时候，
+没有指定要访问的数据库，
+那么 <code class="docutils literal"><span class="pre">psql</span></code> 将访问与用户的用户名同名的数据库。</p>
+<p>在进入 <code class="docutils literal"><span class="pre">psql</span></code> 程序之后，
+你将看到以下信息：</p>
+<div class="highlight-psql"><div class="highlight"><pre><span class="n">psql</span> <span class="p">(</span><span class="mf">9.5</span><span class="n">beta1</span><span class="p">)</span>
+<span class="k">Type</span> <span class="s-Name">&quot;help&quot;</span> <span class="k">for</span> <span class="n">help</span><span class="mf">.</span>
+
+<span class="gp">mydb=&gt;</span>
+</pre></div>
+</div>
+<p>在某些情况下，
+消息的最后一行也可能是这样的：</p>
+<div class="highlight-psql"><div class="highlight"><pre><span class="gp">mydb=#</span>
+</pre></div>
+</div>
+<p>这意味着你是数据库的超级用户。
+如果你是自己亲自安装 PostgreSQL 的话，
+那么你通常就会是这种超级用户。</p>
+<p>成为超级管理员意味着你将不受制于访问控制规则，
+但对于本教程要展示的内容来说，
+用户是否超级管理员并不重要。</p>
+<p>如果你在启动 <code class="docutils literal"><span class="pre">psql</span></code> 程序的时候遇上了问题，
+那么请阅读前一个小节。
+因为 <code class="docutils literal"><span class="pre">createdb</span></code> 和 <code class="docutils literal"><span class="pre">psql</span></code> 可能遇上的问题都是相似的，
+所以如果 <code class="docutils literal"><span class="pre">createdb</span></code> 能够成功运作，
+那么 <code class="docutils literal"><span class="pre">psql</span></code> 一般也不会出现什么问题。</p>
+<p><code class="docutils literal"><span class="pre">psql</span></code> 打印的最后一行为提示符（prompt），
+它意味着 <code class="docutils literal"><span class="pre">psql</span></code> 正在等候你的指示，
+这时你就可以将 SQL 查询语句键入到 <code class="docutils literal"><span class="pre">psql</span></code> 维护的工作空间（work space）当中。
+你可以尝试键入以下语句：</p>
+<div class="highlight-psql"><div class="highlight"><pre><span class="gp">mydb=&gt;</span> <span class="k">SELECT</span> <span class="k">version</span><span class="p">();</span>
+<span class="go">                                                    version</span>
+<span class="go">-----------------------------------------------------------------------------------------------------------------</span>
+<span class="go">PostgreSQL 9.5beta1 on x86_64-apple-darwin15.0.0, compiled by Apple LLVM version 7.0.0 (clang-700.1.76), 64-bit</span>
+<span class="go">(1 row)</span>
+
+<span class="gp">mydb=&gt;</span> <span class="k">SELECT</span> <span class="k">current_date</span><span class="p">;</span>
+<span class="go">    date</span>
+<span class="go">------------</span>
+<span class="go"> 2015-11-02</span>
+<span class="go">(1 row)</span>
+
+<span class="gp">mydb=&gt;</span> <span class="k">SELECT</span> <span class="mf">2</span> <span class="o">+</span> <span class="mf">2</span><span class="p">;</span>
+<span class="go"> ?column?</span>
+<span class="go">----------</span>
+<span class="go">        4</span>
+<span class="go">(1 row)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">psql</span></code> 程序提供了一些不属于 SQL 命令的内部命令，
+这些命令都以反斜线符号 <code class="docutils literal"><span class="pre">&quot;\&quot;</span></code> 开头。
+举个例子，
+你可以通过输入以下命令来获得关于不同的 PostgreSQL SQL 命令的语法帮助信息：</p>
+<div class="highlight-psql"><div class="highlight"><pre><span class="gp">mydb=&gt;</span> <span class="kp">\h</span>
+</pre></div>
+</div>
+<p>要退出 <code class="docutils literal"><span class="pre">psql</span></code> ，
+你可以输入：</p>
+<div class="highlight-psql"><div class="highlight"><pre><span class="gp">mydb=&gt;</span> <span class="kp">\q</span>
+</pre></div>
+</div>
+<p>然后 <code class="docutils literal"><span class="pre">psql</span></code> 就会退出并返回至你原来的命令行。
+（要了解更多内部命令，
+请在 <code class="docutils literal"><span class="pre">psql</span></code> 提示符中输入 <code class="docutils literal"><span class="pre">\?</span></code> 。）
+<a class="reference external" href="http://www.postgresql.org/docs/9.5/static/app-psql.html">psql 的文档</a> 记录了 <code class="docutils literal"><span class="pre">psql</span></code> 的各项特性，
+本文档并不会显式地使用这些特性，
+但你可以在需要的时候自行使用它们。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             >索引</a></li>
+        <li class="right" >
+          <a href="the-sql-language.html" title="SQL 语言简介"
+             >下一页</a> |</li>
+        <li class="right" >
+          <a href="../preface/what-is-postgresql.html" title="PostgreSQL 简介"
+             >上一页</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PostgreSQL 数据库文档</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; 版权所有 2015, 黄健宏.
+      由 <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1 创建。
+    </div>
+  </body>
+</html>
